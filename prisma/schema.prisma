@@ -16,6 +16,7 @@ model Tenant {
   users    TenantUser[]
   rooms    Room[]
   bookings Booking[]
+  invitations Invitation[]
 }
 
 model User {
@@ -62,4 +63,19 @@ model Booking {
   tenant Tenant @relation(fields: [tenantId], references: [id])
   room   Room   @relation(fields: [roomId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
+}
+
+model Invitation {
+  id          String    @id @default(uuid())
+  tenantId    String
+  email       String
+  role        String
+  isPermanent Boolean   @default(false)
+  acceptedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([email])
 }

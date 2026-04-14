@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { date } from 'zod/v4'
 
 const DEFAULT_TENANT_NAME = 'Default Workspace'
 const DEFAULT_TENANT_SLUG = 'default-workspace'
@@ -65,13 +66,54 @@ export async function syncAuthenticatedUser() {
     },
   })
 
-  const tenantUser = await db.tenantUser.findFirst({
+  let tenantUser = await db.tenantUser.findFirst({
     where: { userId: user.id },
     include: {
       tenant: true,
     },
   })
-  
+
+  if (!tenantUser) {
+    const invitation = await db.invitation.findFirst({
+      where:{
+        email: authUser.email,
+        acceptedAt: null,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } },
+        ]
+      },
+      orderBy:{ 
+        createdAt: 'asc',
+      },
+  })
+
+    if (invitation) {
+      await db.tenantUser.create({
+        data: {
+          tenantId: invitation.tenantId,
+          userId: user.id,
+          role:invitation.role,
+          isPermanent:invitation.isPermanent
+        },
+      })
+
+      await db.invitation.update({
+        where:{id: invitation.id},
+        data:{
+          acceptedAt: new Date(),
+        }
+      })
+
+      tenantUser = await db.tenantUser.findFirst({
+        where: { userId: user.id },
+        include: {
+          tenant: true,
+        },
+      })
+    }
+  }
+
   return {
     authUser,
     user,
