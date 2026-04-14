@@ -1,12 +1,28 @@
-import Link from 'next/link'
+import { createWorkspace } from "./actions"
+
 
 export default function OnboardingPage() {
   return (
-    <div>
+      <div>
       <h1>Welcome</h1>
       <p>You are signed in, but you do not belong to any workspace yet.</p>
-      <p>You can ask an administrator to invite you or create a new workspace later.</p>
-      <Link href="/signin">Back to sign in</Link>
+
+      <h2>Create a workspace</h2>
+
+      <form action={createWorkspace}>
+        <input
+          name="name"
+          placeholder="Workspace name"
+          required
+        />
+        <button type="submit">Create workspace</button>
+      </form>
+
+      <hr />
+
+      <p>
+        Or ask an administrator to invite you to an existing workspace.
+      </p>
     </div>
   )
 }
