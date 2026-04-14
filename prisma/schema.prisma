@@ -13,9 +13,9 @@ model Tenant {
   slug      String   @unique
   createdAt DateTime @default(now())
 
-  users     TenantUser[]
-  rooms     Room[]
-  bookings  Booking[]
+  users    TenantUser[]
+  rooms    Room[]
+  bookings Booking[]
 }
 
 model User {
@@ -24,15 +24,16 @@ model User {
   fullName  String
   createdAt DateTime @default(now())
 
-  tenants   TenantUser[]
+  tenants TenantUser[]
+  Booking Booking[]
 }
 
 model TenantUser {
-  id           String @id @default(uuid())
-  tenantId     String
-  userId       String
-  role         String
-  isPermanent  Boolean @default(false)
+  id          String  @id @default(uuid())
+  tenantId    String
+  userId      String
+  role        String
+  isPermanent Boolean @default(false)
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
@@ -41,22 +42,22 @@ model TenantUser {
 }
 
 model Room {
-  id        String @id @default(uuid())
-  tenantId  String
-  name      String
+  id       String @id @default(uuid())
+  tenantId String
+  name     String
 
-  tenant    Tenant @relation(fields: [tenantId], references: [id])
-  bookings  Booking[]
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  bookings Booking[]
 }
 
 model Booking {
-  id        String   @id @default(uuid())
-  tenantId  String
-  roomId    String
-  userId    String
-  startAt   DateTime
-  endAt     DateTime
-  type      String
+  id       String   @id @default(uuid())
+  tenantId String
+  roomId   String
+  userId   String
+  startAt  DateTime
+  endAt    DateTime
+  type     String
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
   room   Room   @relation(fields: [roomId], references: [id])
