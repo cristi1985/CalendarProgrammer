@@ -8,6 +8,10 @@ export default async function AppPage() {
     redirect('/signin')
   }
 
+  if(!result.tenantUser){
+    redirect('/onboarding')
+  }
+
   return (
     <div>
       <h1>Dashboard</h1>

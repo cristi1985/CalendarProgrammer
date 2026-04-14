@@ -65,35 +65,13 @@ export async function syncAuthenticatedUser() {
     },
   })
 
-  let tenantUser = await db.tenantUser.findFirst({
+  const tenantUser = await db.tenantUser.findFirst({
     where: { userId: user.id },
     include: {
       tenant: true,
     },
   })
-
-  if (!tenantUser) {
-    const tenant = await db.tenant.upsert({
-      where: { slug: DEFAULT_TENANT_SLUG },
-      update: {},
-      create: {
-        name: DEFAULT_TENANT_NAME,
-        slug: DEFAULT_TENANT_SLUG,
-      },
-    })
-
-    tenantUser = await db.tenantUser.create({
-      data: {
-        userId: user.id,
-        tenantId: tenant.id,
-        role: 'owner',
-      },
-      include: {
-        tenant: true,
-      },
-    })
-  }
-
+  
   return {
     authUser,
     user,

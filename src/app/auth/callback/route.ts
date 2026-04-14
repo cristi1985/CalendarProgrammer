@@ -11,7 +11,11 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  await syncAuthenticatedUser()
+  const result = await syncAuthenticatedUser()
+
+  if(!result?.tenantUser){
+    return NextResponse.redirect(new URL('/onboarding', request.url))
+  }
 
   return NextResponse.redirect(new URL('/app', request.url))
 }
