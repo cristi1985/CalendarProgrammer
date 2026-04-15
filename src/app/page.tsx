@@ -1,12 +1,5 @@
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-export default function Home() {
-  return (
-    <div>
-      <h1>Calendar Programmer</h1>
-      <p>Room booking SaaS</p>
-
-      <Link href="/signin">Sign in</Link>
-    </div>
-  )
+export default function AppPage() {
+  redirect('/app/calendar')
 }
