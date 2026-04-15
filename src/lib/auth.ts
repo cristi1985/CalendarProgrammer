@@ -1,10 +1,6 @@
 import { db } from '@/lib/db'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { date } from 'zod/v4'
-
-const DEFAULT_TENANT_NAME = 'Default Workspace'
-const DEFAULT_TENANT_SLUG = 'default-workspace'
 
 export function createServerSupabaseClient() {
   const cookieStore = cookies()
