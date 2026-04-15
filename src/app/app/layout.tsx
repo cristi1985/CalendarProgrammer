@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { logout } from './actions'
 
 export default async function AppLayout({
   children,
@@ -18,23 +19,40 @@ export default async function AppLayout({
   }
 
   return (
-    <div>
-      <header style={{ marginBottom: 24 }}>
-        <h1 style={{ marginBottom: 8 }}>Calendar Programmer</h1>
+     <div className="app-shell">
+      <div className="app-container">
+        <header className="app-header">
+          <h1 className="app-title">Calendar Programmer</h1>
+          <p className="app-subtitle">
+            Welcome {result.user.fullName} — {result.tenantUser.tenant.name}
+          </p>
 
-        <div style={{ marginBottom: 12 }}>
-          Welcome {result.user.fullName} — {result.tenantUser.tenant.name}
-        </div>
+          <nav className="app-nav">
+            <Link className="nav-link" href="/app/calendar">
+              Calendar
+            </Link>
+            <Link className="nav-link" href="/app/bookings">
+              Bookings
+            </Link>
+            <Link className="nav-link" href="/app/settings/rooms">
+              Rooms
+            </Link>
+            <Link className="nav-link" href="/app/settings/invitations">
+              Invitations
+            </Link>
 
-        <nav style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Link href="/app/calendar">Calendar</Link>
-          <Link href="/app/bookings">Bookings</Link>
-          <Link href="/app/settings/rooms">Rooms</Link>
-          <Link href="/app/settings/invitations">Invitations</Link>
-        </nav>
-      </header>
+            <div className="nav-spacer" />
 
-      <main>{children}</main>
+            <form action={logout}>
+              <button type="submit" className="secondary">
+                Logout
+              </button>
+            </form>
+          </nav>
+        </header>
+
+        <main className="page-card">{children}</main>
+      </div>
     </div>
   )
 }
