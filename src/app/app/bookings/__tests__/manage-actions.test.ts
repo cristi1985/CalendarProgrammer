@@ -1,20 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const redirectMock = vi.fn()
-const revalidatePathMock = vi.fn()
-
-const syncAuthenticatedUserMock = vi.fn()
-
-const dbMock = {
-  booking: {
-    findFirst: vi.fn(),
-    delete: vi.fn(),
-    update: vi.fn(),
+const {
+  redirectMock,
+  revalidatePathMock,
+  syncAuthenticatedUserMock,
+  dbMock,
+} = vi.hoisted(() => ({
+  redirectMock: vi.fn(),
+  revalidatePathMock: vi.fn(),
+  syncAuthenticatedUserMock: vi.fn(),
+  dbMock: {
+    booking: {
+      findFirst: vi.fn(),
+      delete: vi.fn(),
+      update: vi.fn(),  
+    },
+    room: {
+      findFirst: vi.fn(),
+    },
   },
-  room: {
-    findFirst: vi.fn(),
-  },
-}
+}))
+
+  
 
 vi.mock('next/navigation', () => ({
   redirect: (...args: unknown[]) => redirectMock(...args),
