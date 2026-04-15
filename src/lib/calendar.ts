@@ -21,6 +21,14 @@ export function formatDateForInput(date: Date) {
   return `${year}-${month}-${day}`
 }
 
+export function isSameCalendarDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
 export function getDayBounds(date: Date) {
   const start = new Date(date)
   start.setHours(0, 0, 0, 0)
