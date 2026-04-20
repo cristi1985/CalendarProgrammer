@@ -98,3 +98,35 @@ export function generateOccurrences({
 
   return result
 }
+
+export function buildTimeOptions() {
+  const options: string[] = []
+
+  for (let hour = 8; hour < 21; hour += 1) {
+    options.push(`${hour.toString().padStart(2, '0')}:00`)
+    options.push(`${hour.toString().padStart(2, '0')}:30`)
+  }
+
+  options.push('21:00')
+
+  return options
+}
+
+export function toDateInputValue(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+
+  return `${year}-${month}-${day}`
+}
+
+export function toTimeInputValue(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  const hours = pad(date.getHours())
+  const minutes = pad(date.getMinutes())
+
+  return `${hours}:${minutes}`
+}
