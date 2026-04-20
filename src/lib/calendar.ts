@@ -8,6 +8,7 @@ export function buildHourSlots() {
 
   for (let hour = CALENDAR_START_HOUR; hour < CALENDAR_END_HOUR; hour += 1) {
     slots.push(`${hour.toString().padStart(2, '0')}:00`)
+    slots.push(`${hour.toString().padStart(2, '0')}:30`)
   }
 
   return slots

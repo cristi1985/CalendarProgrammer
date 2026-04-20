@@ -13,9 +13,9 @@ describe('calendar helpers', () => {
   it('builds hour slots correctly', () => {
     const slots = buildHourSlots()
 
-    expect(slots[0]).toBe('08:00')
-    expect(slots.at(-1)).toBe('20:00')
-    expect(slots.length).toBe(13)
+    expect(slots.length).toBe(26)
+    expect(slots[1]).toBe('08:30')
+    expect(slots.at(-1)).toBe('20:30')
   })
 
   it('formats date correctly', () => {

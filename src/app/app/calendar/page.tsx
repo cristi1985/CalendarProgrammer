@@ -39,10 +39,10 @@ function getBookingTopAndHeight(startAt: Date, endAt: Date) {
   const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
   const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
   const calendarStartMinutes = 8 * 60
-  const pixelsPerMinute = 1
+  const pixelsPerMinute = 40 / 30
 
   const top = Math.max(0, startMinutes - calendarStartMinutes) * pixelsPerMinute
-  const height = Math.max(30, (endMinutes - startMinutes) * pixelsPerMinute)
+  const height = Math.max(28, (endMinutes - startMinutes) * pixelsPerMinute)
 
   return { top, height }
 }
@@ -154,7 +154,7 @@ export default async function CalendarPage({
                 <div
                   key={slot}
                   style={{
-                    height: 60,
+                    height: 40,
                     borderBottom: '1px solid var(--border)',
                     fontSize: 12,
                     color: 'var(--muted)',
@@ -179,7 +179,7 @@ export default async function CalendarPage({
                   className="calendar-day-column"
                   style={{
                     position: 'relative',
-                    height: hourSlots.length * 60,
+                    height: hourSlots.length * 40,
                     border: '1px solid var(--border)',
                     borderRadius: 12,
                     overflow: 'hidden',
@@ -189,7 +189,7 @@ export default async function CalendarPage({
                     <div
                       key={slot}
                       style={{
-                        height: 60,
+                        height: 40,
                         borderBottom: '1px solid var(--border)',
                         padding: 4,
                       }}
