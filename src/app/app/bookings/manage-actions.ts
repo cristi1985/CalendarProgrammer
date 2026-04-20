@@ -23,6 +23,14 @@ function parseDateTime(value: FormDataEntryValue | null) {
   return date
 }
 
+function validateHalfHourStep(startAt: Date, endAt: Date) {
+  const validMinutes = [0, 30]
+
+  if (!validMinutes.includes(startAt.getMinutes()) || !validMinutes.includes(endAt.getMinutes())) {
+    throw new Error('Bookings must start and end on the hour or half hour.')
+  }
+}
+
 function validateWithinWorkingHours(startAt: Date, endAt: Date) {
   const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
   const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
@@ -152,7 +160,8 @@ export async function updateBooking(formData: FormData) {
   if (startAt >= endAt) {
     throw new Error('Booking start time must be before end time.')
   }
-
+ 
+  validateHalfHourStep(startAt, endAt);
   validateWithinWorkingHours(startAt, endAt)
 
   const booking = await getManagedBooking(bookingId, result.tenantUser.tenantId)

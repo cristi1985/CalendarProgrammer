@@ -24,29 +24,43 @@ export default async function RoomsPage() {
   })
 
   return (
-    <div>
-      <h1>Rooms</h1>
+    <div className="stack">
+      <div>
+        <h1 className="page-title">Rooms</h1>
+      </div>
 
-      <h2>Create room</h2>
+      <section className="stack">
+        <h2 className="section-title">Create room</h2>
 
-      <form action={createRoom}>
-        <input
-          name="name"
-          placeholder="Room name"
-          required
-        />
-        <button type="submit">Add room</button>
-      </form>
+        <form action={createRoom} className="stack">
+          <div className="form-grid">
+            <input
+              className="input"
+              name="name"
+              placeholder="Room name"
+              required
+            />
+          </div>
 
-      <hr />
+          <div>
+            <button className="button" type="submit">
+              Add room
+            </button>
+          </div>
+        </form>
+      </section>
 
-      <h2>Existing rooms</h2>
+      <section className="stack">
+        <h2 className="section-title">Existing rooms</h2>
 
-      <ul>
-        {rooms.map((room) => (
-          <li key={room.id}>{room.name}</li>
-        ))}
-      </ul>
+        <div className="card-list">
+          {rooms.map((room) => (
+            <div key={room.id} className="card-item">
+              <strong>{room.name}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

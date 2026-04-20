@@ -24,43 +24,62 @@ export default async function InvitationsPage() {
   })
 
   return (
-    <div>
-      <h1>Invitations</h1>
+    <div className="stack">
+      <div>
+        <h1 className="page-title">Invitations</h1>
+      </div>
 
-      <h2>Invite a user</h2>
+      <section className="stack">
+        <h2 className="section-title">Invite a user</h2>
 
-      <form action={createInvitation}>
-        <input
-          name="email"
-          placeholder="Email"
-          required
-        />
+        <form action={createInvitation} className="stack">
+          <div className="form-grid">
+            <input
+              className="input"
+              name="email"
+              placeholder="Email address"
+              required
+            />
 
-        <select name="role" defaultValue="member">
-          <option value="member">Member</option>
-          <option value="admin">Admin</option>
-          <option value="owner">Owner</option>
-        </select>
+            <select className="select" name="role" defaultValue="member">
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
+            </select>
+          </div>
 
-        <label>
-          <input type="checkbox" name="isPermanent" /> Permanent
-        </label>
+          <label className="muted" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input style={{ width: 'auto', minHeight: 'auto' }} type="checkbox" name="isPermanent" />
+            Permanent user
+          </label>
 
-        <button type="submit">Send invite</button>
-      </form>
+          <div>
+            <button className="button" type="submit">
+              Send invite
+            </button>
+          </div>
+        </form>
+      </section>
 
-      <hr />
+      <section className="stack">
+        <h2 className="section-title">Pending invitations</h2>
 
-      <h2>Pending invitations</h2>
-
-      <ul>
-        {invitations.map((inv) => (
-          <li key={inv.id}>
-            {inv.email} — {inv.role} —{' '}
-            {inv.acceptedAt ? 'Accepted' : 'Pending'}
-          </li>
-        ))}
-      </ul>
+        <div className="card-list">
+          {invitations.map((inv) => (
+            <div key={inv.id} className="card-item">
+              <div>
+                <strong>{inv.email}</strong>
+              </div>
+              <div className="muted">
+                Role: {inv.role}
+              </div>
+              <div className="muted">
+                Status: {inv.acceptedAt ? 'Accepted' : 'Pending'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

@@ -155,4 +155,17 @@ describe('createBooking action', () => {
     expect(dbMock.booking.createMany).toHaveBeenCalledTimes(1)
     expect(revalidatePathMock).toHaveBeenCalledWith('/app/bookings')
   })
+
+  it('rejects bookings not aligned to hour or half hour', async () => {
+  const formData = new FormData()
+  formData.set('roomId', 'room-1')
+  formData.set('type', 'hourly')
+  formData.set('recurrence', 'none')
+  formData.set('startAt', '2025-01-01T10:15')
+  formData.set('endAt', '2025-01-01T11:00')
+
+  await expect(createBooking(formData)).rejects.toThrow(
+    'Bookings must start and end on the hour or half hour.'
+  )
+})
 })

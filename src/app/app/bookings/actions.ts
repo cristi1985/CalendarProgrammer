@@ -12,6 +12,14 @@ const MAX_RECURRENCE_DAYS = 14
 type BookingType = 'hourly' | 'daily'
 type RecurrenceType = 'none' | 'daily' | 'weekly'
 
+function validateHalfHourStep(startAt: Date, endAt: Date) {
+  const validMinutes = [0, 30]
+
+  if (!validMinutes.includes(startAt.getMinutes()) || !validMinutes.includes(endAt.getMinutes())) {
+    throw new Error('Bookings must start and end on the hour or half hour.')
+  }
+}
+
 function parseDateTime(value: FormDataEntryValue | null) {
   if (typeof value !== 'string' || !value) {
     throw new Error('Date and time are required.')
@@ -142,7 +150,7 @@ export async function createBooking(formData: FormData) {
   if (startAt >= endAt) {
     throw new Error('Booking start time must be before end time.')
   }
-
+  validateHalfHourStep(startAt, endAt);
   validateWithinWorkingHours(startAt, endAt)
 
   if (type === 'daily' && !isSameCalendarDay(startAt, endAt)) {

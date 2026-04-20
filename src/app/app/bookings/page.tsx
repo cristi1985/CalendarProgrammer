@@ -51,114 +51,141 @@ export default async function BookingsPage() {
   })
 
   return (
-    <div>
-      <h1>Bookings</h1>
+     <div className="stack">
+      <div>
+        <h1 className="page-title">Bookings</h1>
+      </div>
 
-      <h2>Create booking</h2>
+      <section className="stack">
+        <h2 className="section-title">Create booking</h2>
 
-      <form action={createBooking}>
-        <select name="roomId" required>
-          <option value="">Select room</option>
-          {rooms.map((room) => (
-            <option key={room.id} value={room.id}>
-              {room.name}
-            </option>
-          ))}
-        </select>
+        <form action={createBooking} className="stack">
+          <div className="form-grid">
+            <select className="select" name="roomId" required>
+              <option value="">Select room</option>
+              {rooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
+                </option>
+              ))}
+            </select>
 
-        <select name="type" defaultValue="hourly">
-          <option value="hourly">Hourly</option>
-          <option value="daily">Daily</option>
-        </select>
+            <select className="select" name="type" defaultValue="hourly">
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+            </select>
+          </div>
 
-        <div>
-          <label>Start</label>
-          <input type="datetime-local" name="startAt" required />
-        </div>
-
-        <div>
-          <label>End</label>
-          <input type="datetime-local" name="endAt" required />
-        </div>
-
-        <h3>Recurrence</h3>
-
-        <select name="recurrence" defaultValue="none">
-          <option value="none">None</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-        </select>
-
-        <div>
-          <label>Repeat until</label>
-          <input type="date" name="recurrenceUntil" />
-        </div>
-
-        <button type="submit">Create booking</button>
-      </form>
-
-      <hr />
-
-      <h2>Recent bookings</h2>
-
-      <ul>
-         {bookings.map((b) => (
-          <li key={b.id} style={{ marginBottom: 24 }}>
+          <div className="form-grid">
             <div>
-              <strong>{b.room.name}</strong> — {b.user.fullName}
+              <label className="muted">Start</label>
+              <input className="input" type="datetime-local" step="" name="startAt" required />
             </div>
 
             <div>
-              {new Date(b.startAt).toLocaleString()} →{' '}
-              {new Date(b.endAt).toLocaleString()}
+              <label className="muted">End</label>
+              <input className="input" type="datetime-local" step="1800" name="endAt" required />
             </div>
+          </div>
 
-            <div>Type: {b.type}</div>
+          <div className="form-grid">
+            <select className="select" name="recurrence" defaultValue="none">
+              <option value="none">No recurrence</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
 
-            {/* EDIT */}
-            <details>
-              <summary>Edit booking</summary>
-              <form action={updateBooking}>
+            <div>
+              <label className="muted">Repeat until</label>
+              <input className="input" type="date" name="recurrenceUntil" />
+            </div>
+          </div>
+
+          <div>
+            <button className="button" type="submit">
+              Create booking
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="stack">
+        <h2 className="section-title">Recent bookings</h2>
+
+        <div className="card-list">
+          {bookings.map((b) => (
+            <div key={b.id} className="card-item">
+              <div style={{ marginBottom: 8 }}>
+                <strong>{b.room.name}</strong> — {b.user.fullName}
+              </div>
+
+              <div className="muted" style={{ marginBottom: 8 }}>
+                {new Date(b.startAt).toLocaleString()} →{' '}
+                {new Date(b.endAt).toLocaleString()}
+              </div>
+
+              <div style={{ marginBottom: 12 }}>Type: {b.type}</div>
+
+              <details>
+                <summary>Edit booking</summary>
+
+                <form action={updateBooking} className="stack" style={{ marginTop: 12 }}>
+                  <input type="hidden" name="bookingId" value={b.id} />
+
+                  <div className="form-grid">
+                    <select className="select" name="roomId" defaultValue={b.roomId}>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.id}>
+                          {room.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div />
+                  </div>
+
+                  <div className="form-grid">
+                    <div>
+                      <label className="muted">Start</label>
+                      <input
+                        className="input"
+                        type="datetime-local"
+                        name="startAt"
+                        step="1800"
+                        defaultValue={toDateTimeLocalValue(new Date(b.startAt))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="muted">End</label>
+                      <input
+                        className="input"
+                        type="datetime-local"
+                        name="endAt"
+                        step="1800"
+                        defaultValue={toDateTimeLocalValue(new Date(b.endAt))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="inline-actions">
+                    <button className="button" type="submit">
+                      Save changes
+                    </button>
+                  </div>
+                </form>
+              </details>
+
+              <form action={cancelBooking} style={{ marginTop: 12 }}>
                 <input type="hidden" name="bookingId" value={b.id} />
-
-                <select name="roomId" defaultValue={b.roomId}>
-                  {rooms.map((room) => (
-                    <option key={room.id} value={room.id}>
-                      {room.name}
-                    </option>
-                  ))}
-                </select>
-
-                <div>
-                  <label>Start</label>
-                  <input
-                    type="datetime-local"
-                    name="startAt"
-                    defaultValue={toDateTimeLocalValue(new Date(b.startAt))}
-                  />
-                </div>
-
-                <div>
-                  <label>End</label>
-                  <input
-                    type="datetime-local"
-                    name="endAt"
-                    defaultValue={toDateTimeLocalValue(new Date(b.endAt))}
-                  />
-                </div>
-
-                <button type="submit">Save</button>
+                <button className="secondary" type="submit">
+                  Cancel booking
+                </button>
               </form>
-            </details>
-
-            {/* CANCEL */}
-            <form action={cancelBooking}>
-              <input type="hidden" name="bookingId" value={b.id} />
-              <button type="submit">Cancel booking</button>
-            </form>
-          </li>
-        ))}
-      </ul>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
