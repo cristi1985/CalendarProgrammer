@@ -35,3 +35,56 @@ export async function createRoom(formData: FormData) {
 
   revalidatePath('/app/settings/rooms')
 }
+
+export async function deleteRoom(formData: FormData) {
+  const result = await syncAuthenticatedUser()
+
+  if (!result) {
+    redirect('/signin')
+  }
+
+  if (!result.tenantUser) {
+    redirect('/onboarding')
+  }
+
+  if (!['owner', 'admin'].includes(result.tenantUser.role)) {
+    throw new Error('You are not allowed to delete rooms in this workspace.')
+  }
+
+  const roomId = formData.get('roomId')
+
+  if (typeof roomId !== 'string') {
+    throw new Error('Invalid room ID provided.')
+  }
+
+  const room = await db.room.findFirst({
+    where: {
+      id: roomId,
+      tenantId: result.tenantUser.tenantId,
+    },
+  })
+
+  if (!room) {
+    throw new Error('Room not found in this workspace.')
+  }
+
+  const bookingCount = await db.booking.count({
+    where: {
+      tenantId: result.tenantUser.tenantId,
+      roomId,
+    },
+  })
+
+  if (bookingCount > 0) {
+    throw new Error('Room cannot be deleted because it already has bookings.')
+  }
+
+  await db.room.delete({
+    where: {
+      id: roomId,
+      tenantId: result.tenantUser.tenantId,
+    },
+  })
+
+  revalidatePath('/app/settings/rooms')
+}

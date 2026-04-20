@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { createRoom } from './actions'
+import { createRoom, deleteRoom } from './actions'
 
 export default async function RoomsPage() {
   const result = await syncAuthenticatedUser()
@@ -48,6 +48,34 @@ export default async function RoomsPage() {
             </button>
           </div>
         </form>
+      </section>
+
+      <section className="stack">
+        <h2 className="section-title">Delete rooms</h2>
+          <div className="card-list">
+            {rooms.map((room) => (
+              <div
+                key={room.id}
+                className="card-item"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <strong>{room.name}</strong>
+
+                <form action={deleteRoom}>
+                  <input type="hidden" name="roomId" value={room.id} />
+                  <button className="secondary" type="submit">
+                    Delete
+                  </button>
+                </form>
+              </div>
+            ))}
+        </div>
       </section>
 
       <section className="stack">
