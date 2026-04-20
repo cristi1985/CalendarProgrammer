@@ -15,9 +15,19 @@ export default function SignInPage() {
   }
 
   return (
-    <div>
-      <h1>Sign in</h1>
-      <button onClick={handleLogin}>Sign in with Google</button>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <h1 className="auth-title">Sign in</h1>
+        <p className="auth-subtitle">
+          Access your room booking workspace from desktop, iPhone, or Android.
+        </p>
+
+        <div className="auth-actions">
+          <button type="button" onClick={handleLogin}>
+            Sign in with Google
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
