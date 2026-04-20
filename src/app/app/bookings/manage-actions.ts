@@ -133,6 +133,16 @@ export async function cancelBooking(formData: FormData) {
   revalidatePath('/app/bookings')
 }
 
+function combineDateAndTime(date: string, time: string) {
+  const value = new Date(`${date}T${time}`)
+
+  if (Number.isNaN(value.getTime())) {
+    throw new Error('Invalid date or time provided.')
+  }
+
+  return value
+}
+
 export async function updateBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()
 
@@ -146,8 +156,9 @@ export async function updateBooking(formData: FormData) {
 
   const bookingId = formData.get('bookingId')
   const roomId = formData.get('roomId')
-  const startAt = parseDateTime(formData.get('startAt'))
-  const endAt = parseDateTime(formData.get('endAt'))
+  const dateValue = formData.get('date')
+  const startTimeValue = formData.get('startTime')
+  const endTimeValue = formData.get('endTime')
 
   if (typeof bookingId !== 'string' || !bookingId) {
     throw new Error('Booking id is required.')
@@ -156,6 +167,13 @@ export async function updateBooking(formData: FormData) {
   if (typeof roomId !== 'string' || !roomId) {
     throw new Error('Room id is required.')
   }
+
+  if (typeof dateValue !== 'string' || typeof startTimeValue !== 'string' || typeof endTimeValue !== 'string') {
+    throw new Error('Date, start time, and end time are required.')
+  }
+
+  const startAt = combineDateAndTime(dateValue, startTimeValue)
+  const endAt = combineDateAndTime(dateValue, endTimeValue)
 
   if (startAt >= endAt) {
     throw new Error('Booking start time must be before end time.')
