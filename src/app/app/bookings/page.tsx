@@ -27,6 +27,20 @@ export default async function BookingsPage() {
     redirect('/onboarding')
   }
 
+  function buildTimeOptions() {
+    const options: string[] = []
+
+    for (let hour = 8; hour < 21; hour++) {
+       options.push(`${hour.toString().padStart(2, '0')}:00`)
+       options.push(`${hour.toString().padStart(2, '0')}:30`)
+      }
+    options.push('21:00')
+
+    return options
+  }
+
+  const timeOptions = buildTimeOptions()
+
   const rooms = await db.room.findMany({
     where: {
       tenantId: result.tenantUser.tenantId,
@@ -78,13 +92,32 @@ export default async function BookingsPage() {
 
           <div className="form-grid">
             <div>
-              <label className="muted">Start</label>
-              <input className="input" type="datetime-local" step="" name="startAt" required />
+              <label className="muted">Date</label>
+              <input className="input" type="date" name="date" required />
             </div>
 
             <div>
-              <label className="muted">End</label>
-              <input className="input" type="datetime-local" step="1800" name="endAt" required />
+              <label className="muted">Start time</label>
+              <select className="select" name="startTime" required>
+                <option value="">Select start time</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="muted">End time</label>
+              <select className="select" name="endTime" required>
+                <option value="">Select end time</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -146,25 +179,32 @@ export default async function BookingsPage() {
 
                   <div className="form-grid">
                     <div>
-                      <label className="muted">Start</label>
-                      <input
-                        className="input"
-                        type="datetime-local"
-                        name="startAt"
-                        step="1800"
-                        defaultValue={toDateTimeLocalValue(new Date(b.startAt))}
-                      />
+                      <label className="muted">Date</label>
+                      <input className="input" type="date" name="date" required />
                     </div>
 
                     <div>
-                      <label className="muted">End</label>
-                      <input
-                        className="input"
-                        type="datetime-local"
-                        name="endAt"
-                        step="1800"
-                        defaultValue={toDateTimeLocalValue(new Date(b.endAt))}
-                      />
+                      <label className="muted">Start time</label>
+                      <select className="select" name="startTime" required>
+                        <option value="">Select start time</option>
+                        {timeOptions.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="muted">End time</label>
+                      <select className="select" name="endTime" required>
+                        <option value="">Select end time</option>
+                        {timeOptions.map((time) => (
+                          <option key={time} value={time}>
+                            {time}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

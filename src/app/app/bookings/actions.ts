@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { date } from 'zod/v4'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -113,6 +114,17 @@ async function ensureNoOverlap(tenantId: string, roomId: string, startAt: Date, 
   }
 }
 
+function combineDateAndTime(date: string, time: string) {
+  const value = new Date(`${date}T${time}`)
+
+  if (Number.isNaN(value.getTime())) {
+    throw new Error('Invalid date or time provided.')
+  }
+
+  return value
+
+}
+
 export async function createBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()
 
@@ -127,8 +139,10 @@ export async function createBooking(formData: FormData) {
   const roomId = formData.get('roomId')
   const type = formData.get('type') as BookingType
   const recurrence = formData.get('recurrence') as RecurrenceType
-  const startAt = parseDateTime(formData.get('startAt'))
-  const endAt = parseDateTime(formData.get('endAt'))
+  const dateValue = formData.get('date')
+  const startTimeValue = formData.get('startTime')
+  const endTimeValue = formData.get('endTime')
+
   const recurrenceUntilValue = formData.get('recurrenceUntil')
   const recurrenceUntil =
     typeof recurrenceUntilValue === 'string' && recurrenceUntilValue
@@ -147,9 +161,18 @@ export async function createBooking(formData: FormData) {
     throw new Error('Recurrence type is invalid.')
   }
 
-  if (startAt >= endAt) {
+  if(typeof dateValue !== 'string' || typeof startTimeValue !== 'string' || typeof endTimeValue !== 'string') {
+    throw new Error('Date, start time, and end time are required.')
+  }
+
+  if (startTimeValue >= endTimeValue) {
     throw new Error('Booking start time must be before end time.')
   }
+
+  const startAt = combineDateAndTime(dateValue, startTimeValue)
+  const endAt = combineDateAndTime(dateValue, endTimeValue)
+
+
   validateHalfHourStep(startAt, endAt);
   validateWithinWorkingHours(startAt, endAt)
 
