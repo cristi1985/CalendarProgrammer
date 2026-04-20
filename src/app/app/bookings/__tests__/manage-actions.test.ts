@@ -156,8 +156,9 @@ describe('booking manage actions', () => {
     const formData = new FormData()
     formData.set('bookingId', 'booking-1')
     formData.set('roomId', 'room-1')
-    formData.set('startAt', '2025-01-01T12:00')
-    formData.set('endAt', '2025-01-01T13:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '12:00')
+    formData.set('endTime', '13:00')
 
     await updateBooking(formData)
 

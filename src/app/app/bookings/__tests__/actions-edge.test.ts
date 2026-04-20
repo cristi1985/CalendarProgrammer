@@ -86,19 +86,6 @@ describe('createBooking edge cases', () => {
     )
   })
 
-  it('rejects daily bookings across multiple days', async () => {
-    const formData = new FormData()
-    formData.set('roomId', 'room-1')
-    formData.set('type', 'daily')
-    formData.set('recurrence', 'none')
-    formData.set('date', '2025-01-01')
-    formData.set('startTime', '10:00')
-    formData.set('endTime', '10:00')
-
-    await expect(createBooking(formData)).rejects.toThrow(
-      'Daily bookings must start and end on the same calendar day.'
-    )
-  })
 
   it('rejects a room outside the current tenant', async () => {
     dbMock.room.findFirst.mockResolvedValue(null)

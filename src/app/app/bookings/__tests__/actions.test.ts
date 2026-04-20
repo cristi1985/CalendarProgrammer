@@ -63,8 +63,9 @@ describe('createBooking action', () => {
     formData.set('roomId', 'room-1')
     formData.set('type', 'hourly')
     formData.set('recurrence', 'none')
-    formData.set('startAt', '2025-01-01T10:00')
-    formData.set('endAt', '2025-01-01T11:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '10:00')
+    formData.set('endTime', '11:00')
 
     await createBooking(formData)
 
@@ -148,8 +149,10 @@ describe('createBooking action', () => {
     formData.set('roomId', 'room-1')
     formData.set('type', 'hourly')
     formData.set('recurrence', 'daily')
-    formData.set('startAt', '2025-01-01T10:00')
-    formData.set('endAt', '2025-01-01T11:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '10:00')
+    formData.set('endTime', '11:00')
+    formData.set('recurrenceUntil', '2025-01-03')
     formData.set('recurrenceUntil', '2025-01-03')
 
     await createBooking(formData)
