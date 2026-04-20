@@ -63,8 +63,9 @@ describe('createBooking edge cases', () => {
     formData.set('roomId', 'room-1')
     formData.set('type', 'hourly')
     formData.set('recurrence', 'none')
-    formData.set('startAt', '2025-01-01T07:00')
-    formData.set('endAt', '2025-01-01T09:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '07:00')
+    formData.set('endTime', '09:00')
 
     await expect(createBooking(formData)).rejects.toThrow(
       'Bookings must be within working hours 08:00-21:00.'
@@ -76,8 +77,9 @@ describe('createBooking edge cases', () => {
     formData.set('roomId', 'room-1')
     formData.set('type', 'hourly')
     formData.set('recurrence', 'none')
-    formData.set('startAt', '2025-01-01T11:00')
-    formData.set('endAt', '2025-01-01T10:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '11:00')
+    formData.set('endTime', '10:00')
 
     await expect(createBooking(formData)).rejects.toThrow(
       'Booking start time must be before end time.'
@@ -89,8 +91,9 @@ describe('createBooking edge cases', () => {
     formData.set('roomId', 'room-1')
     formData.set('type', 'daily')
     formData.set('recurrence', 'none')
-    formData.set('startAt', '2025-01-01T10:00')
-    formData.set('endAt', '2025-01-02T10:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '10:00')
+    formData.set('endTime', '10:00')
 
     await expect(createBooking(formData)).rejects.toThrow(
       'Daily bookings must start and end on the same calendar day.'
@@ -104,8 +107,9 @@ describe('createBooking edge cases', () => {
     formData.set('roomId', 'room-999')
     formData.set('type', 'hourly')
     formData.set('recurrence', 'none')
-    formData.set('startAt', '2025-01-01T10:00')
-    formData.set('endAt', '2025-01-01T11:00')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '10:00')
+    formData.set('endTime', '11:00')
 
     await expect(createBooking(formData)).rejects.toThrow(
       'Selected room does not exist in this workspace.'

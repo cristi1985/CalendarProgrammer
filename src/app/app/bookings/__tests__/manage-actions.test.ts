@@ -118,8 +118,9 @@ describe('booking manage actions', () => {
     const formData = new FormData()
     formData.set('bookingId', 'booking-1')
     formData.set('roomId', 'room-1')
-    formData.set('startAt', '2025-01-02T10:00')
-    formData.set('endAt', '2025-01-02T11:00')
+    formData.set('date', '2025-01-02')
+    formData.set('startTime', '10:00')
+    formData.set('endTime', '11:00')
 
     await expect(updateBooking(formData)).rejects.toThrow(
       'Bookings can only be modified within the same calendar day.'
