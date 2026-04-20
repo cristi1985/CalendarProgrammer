@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { logout } from './actions'
+import AppNav from './AppNav'
 
 export default async function AppLayout({
   children,
@@ -27,19 +28,8 @@ export default async function AppLayout({
             Welcome {result.user.fullName} — {result.tenantUser.tenant.name}
           </p>
 
-          <nav className="app-nav">
-            <Link className="nav-link" href="/app/calendar">
-              Calendar
-            </Link>
-            <Link className="nav-link" href="/app/bookings">
-              Bookings
-            </Link>
-            <Link className="nav-link" href="/app/settings/rooms">
-              Rooms
-            </Link>
-            <Link className="nav-link" href="/app/settings/invitations">
-              Invitations
-            </Link>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <AppNav />
 
             <div className="nav-spacer" />
 
@@ -48,7 +38,7 @@ export default async function AppLayout({
                 Logout
               </button>
             </form>
-          </nav>
+          </div>
         </header>
 
         <main className="page-card">{children}</main>

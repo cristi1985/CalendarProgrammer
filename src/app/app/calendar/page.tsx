@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import {
@@ -9,17 +10,6 @@ import {
   isSameCalendarDay,
 } from '@/lib/calendar'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-
-
-function buildCreateBookingHref(roomId: string, date: Date, hour: string) {
-  const dateStr = formatDateForInput(date)
-  return `/app/bookings?roomId=${roomId}&startAt=${dateStr}T${hour}`
-}
-
-function buildEditBookingHref(bookingId: string) {
-  return `/app/bookings?editBookingId=${bookingId}`
-}
 
 type SearchParams = {
   view?: string
@@ -34,7 +24,8 @@ function parseView(view?: string) {
 
 function parseDate(date?: string) {
   if (!date) return new Date()
-  return new Date(`${date}T00:00:00`)
+  const parsed = new Date(`${date}T00:00:00`)
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
 }
 
 function formatTime(date: Date) {
@@ -42,6 +33,27 @@ function formatTime(date: Date) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function getBookingTopAndHeight(startAt: Date, endAt: Date) {
+  const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
+  const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
+  const calendarStartMinutes = 8 * 60
+  const pixelsPerMinute = 1
+
+  const top = Math.max(0, startMinutes - calendarStartMinutes) * pixelsPerMinute
+  const height = Math.max(30, (endMinutes - startMinutes) * pixelsPerMinute)
+
+  return { top, height }
+}
+
+function buildCreateBookingHref(roomId: string, date: Date, hour: string) {
+  const dateStr = formatDateForInput(date)
+  return `/app/bookings?roomId=${roomId}&startAt=${dateStr}T${hour}`
+}
+
+function buildEditBookingHref(bookingId: string) {
+  return `/app/bookings?editBookingId=${bookingId}`
 }
 
 export default async function CalendarPage({
@@ -59,13 +71,16 @@ export default async function CalendarPage({
   const range = getCalendarRange(view, baseDate)
   const hourSlots = buildHourSlots()
 
-  const rooms = await db.room.findMany({
+  const allRooms = await db.room.findMany({
     where: {
       tenantId: result.tenantUser.tenantId,
-      ...(searchParams.roomId ? { id: searchParams.roomId } : {}),
     },
     orderBy: { name: 'asc' },
   })
+
+  const rooms = searchParams.roomId
+    ? allRooms.filter((room) => room.id === searchParams.roomId)
+    : allRooms
 
   const bookings = await db.booking.findMany({
     where: {
@@ -79,193 +94,236 @@ export default async function CalendarPage({
   })
 
   return (
-    <div>
-      <h1>Calendar</h1>
+    <div className="stack">
+      <div>
+        <h1 className="page-title">Calendar</h1>
 
-      {/* Controls */}
-      <form method="get" style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <select name="view" defaultValue={view}>
-          <option value="day">Day</option>
-          <option value="week">Week</option>
-          <option value="month">Month</option>
-        </select>
+        <form method="get" className="calendar-toolbar">
+          <select className="select" name="view" defaultValue={view}>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
 
-        <input
-          name="date"
-          type="date"
-          defaultValue={formatDateForInput(baseDate)}
-        />
+          <input
+            className="input"
+            name="date"
+            type="date"
+            defaultValue={formatDateForInput(baseDate)}
+          />
 
-        <select name="roomId" defaultValue={searchParams.roomId ?? ''}>
-          <option value="">All rooms</option>
-          {rooms.map((room) => (
-            <option key={room.id} value={room.id}>
-              {room.name}
-            </option>
-          ))}
-        </select>
+          <select className="select" name="roomId" defaultValue={searchParams.roomId ?? ''}>
+            <option value="">All rooms</option>
+            {allRooms.map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.name}
+              </option>
+            ))}
+          </select>
 
-        <button type="submit">Apply</button>
-      </form>
+          <button className="button" type="submit">
+            Apply
+          </button>
 
-      {/* DAY VIEW */}
+          <Link className="nav-link" href="/app/bookings">
+            Manage bookings
+          </Link>
+        </form>
+      </div>
+
       {view === 'day' && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `80px repeat(${rooms.length || 1}, minmax(220px, 1fr))`,
-            gap: 12,
-            alignItems: 'start',
-          }}
-        >
-          <div />
-          {rooms.map((room) => (
-            <div key={room.id}>
-              <strong>{room.name}</strong>
-            </div>
-          ))}
+        <div className="calendar-scroll">
+          <div
+            className="calendar-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `80px repeat(${rooms.length || 1}, minmax(240px, 1fr))`,
+              gap: 12,
+              alignItems: 'start',
+            }}
+          >
+            <div />
+            {rooms.map((room) => (
+              <div key={room.id} className="card-item">
+                <strong>{room.name}</strong>
+              </div>
+            ))}
 
-          <div>
-            {hourSlots.map((slot) => (
-              <div
-                key={slot}
-                style={{
-                  height: 72,
-                  borderBottom: '1px solid #eee',
-                  fontSize: 12,
-                }}
-              >
-                {slot}
+            <div>
+              {hourSlots.map((slot) => (
+                <div
+                  key={slot}
+                  style={{
+                    height: 60,
+                    borderBottom: '1px solid var(--border)',
+                    fontSize: 12,
+                    color: 'var(--muted)',
+                    paddingTop: 4,
+                  }}
+                >
+                  {slot}
+                </div>
+              ))}
+            </div>
+
+            {rooms.map((room) => {
+              const roomBookings = bookings.filter(
+                (booking) =>
+                  booking.roomId === room.id &&
+                  isSameCalendarDay(new Date(booking.startAt), baseDate)
+              )
+
+              return (
+                <div
+                  key={room.id}
+                  className="calendar-day-column"
+                  style={{
+                    position: 'relative',
+                    height: hourSlots.length * 60,
+                    border: '1px solid var(--border)',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {hourSlots.map((slot) => (
+                    <div
+                      key={slot}
+                      style={{
+                        height: 60,
+                        borderBottom: '1px solid var(--border)',
+                        padding: 4,
+                      }}
+                    >
+                      <Link
+                        className="muted"
+                        href={buildCreateBookingHref(room.id, baseDate, slot)}
+                        style={{ fontSize: 12 }}
+                      >
+                        + Add at {slot}
+                      </Link>
+                    </div>
+                  ))}
+
+                  {roomBookings.map((booking) => {
+                    const { top, height } = getBookingTopAndHeight(
+                      new Date(booking.startAt),
+                      new Date(booking.endAt)
+                    )
+
+                    return (
+                      <div
+                        key={booking.id}
+                        className="booking-chip"
+                        style={{
+                          position: 'absolute',
+                          top,
+                          left: 8,
+                          right: 8,
+                          height,
+                          zIndex: 2,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div>
+                          <strong>{booking.user.fullName}</strong>
+                        </div>
+                        <div>
+                          {formatTime(new Date(booking.startAt))} -{' '}
+                          {formatTime(new Date(booking.endAt))}
+                        </div>
+                        <div>{booking.type}</div>
+                        <div className="inline-actions" style={{ marginTop: 6 }}>
+                          <Link href={buildEditBookingHref(booking.id)}>Edit / cancel</Link>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {view === 'week' && (
+        <div className="calendar-scroll">
+          <div
+            className="calendar-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {buildWeekDates(baseDate).map((day) => (
+              <div key={day.toISOString()} className="calendar-week-cell card-item">
+                <div style={{ marginBottom: 8 }}>
+                  <strong>{formatDateForInput(day)}</strong>
+                </div>
+
+                <div className="card-list">
+                  {bookings
+                    .filter((booking) =>
+                      isSameCalendarDay(new Date(booking.startAt), day)
+                    )
+                    .map((booking) => (
+                      <div key={booking.id} className="booking-chip">
+                        <div>
+                          <strong>{booking.room.name}</strong>
+                        </div>
+                        <div>{booking.user.fullName}</div>
+                        <div>
+                          {formatTime(new Date(booking.startAt))} -{' '}
+                          {formatTime(new Date(booking.endAt))}
+                        </div>
+                        <div className="inline-actions" style={{ marginTop: 6 }}>
+                          <Link href={buildEditBookingHref(booking.id)}>Edit / cancel</Link>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             ))}
           </div>
-
-          {rooms.map((room) => {
-            const roomBookings = bookings.filter(
-              (b) =>
-                b.roomId === room.id &&
-                isSameCalendarDay(new Date(b.startAt), baseDate)
-            )
-
-            return (
-              <div
-                key={room.id}
-                style={{
-                  position: 'relative',
-                  border: '1px solid #ddd',
-                  height: hourSlots.length * 72,
-                }}
-              >
-                {hourSlots.map((slot) => (
-                  <div
-                    key={slot}
-                    style={{
-                      height: 72,
-                      borderBottom: '1px solid #eee',
-                      padding: 4,
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    <Link href={buildCreateBookingHref(room.id, baseDate, slot)}>
-                      + Add at {slot}
-                    </Link>
-                  </div>
-                ))}
-
-                {roomBookings.map((b) => {
-                  const start = new Date(b.startAt)
-                  const end = new Date(b.endAt)
-
-                  const startMinutes = start.getHours() * 60 + start.getMinutes()
-                  const endMinutes = end.getHours() * 60 + end.getMinutes()
-                  const dayStartMinutes = 8 * 60
-                  const pixelsPerMinute = 72 / 60
-
-                  const top = (startMinutes - dayStartMinutes) * pixelsPerMinute
-                  const height = Math.max(
-                    36,
-                    (endMinutes - startMinutes) * pixelsPerMinute
-                  )
-
-                  return (
-                    <div
-                      key={b.id}
-                      style={{
-                        position: 'absolute',
-                        top,
-                        left: 8,
-                        right: 8,
-                        height,
-                        background: '#e8f0fe',
-                        border: '1px solid #9bb8ff',
-                        borderRadius: 6,
-                        padding: 8,
-                        zIndex: 2,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div>
-                        <strong>{b.user.fullName}</strong>
-                      </div>
-                      <div>
-                        {formatTime(start)} - {formatTime(end)}
-                      </div>
-                      <div>{b.type}</div>
-                      <Link href={buildEditBookingHref(b.id)}>Edit / cancel</Link>
-                    </div>
-                  )
-                })}
-              </div>
-            )
-          })}
         </div>
       )}
 
-      {/* WEEK VIEW */}
-      {view === 'week' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
-          {buildWeekDates(baseDate).map((day) => (
-            <div key={day.toISOString()} style={{ border: '1px solid #ddd', padding: 8 }}>
-              <strong>{formatDateForInput(day)}</strong>
-
-              {bookings
-                .filter((b) =>
-                  isSameCalendarDay(new Date(b.startAt), day)
-                )
-                .map((b) => (
-                  <div key={b.id}>
-                    {b.room.name} — {formatTime(new Date(b.startAt))}
-                    <Link href={buildEditBookingHref(b.id)}>
-                      Edit / cancel
-                    </Link>
-                  </div>
-                ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* MONTH VIEW */}
       {view === 'month' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
-          {buildMonthDates(baseDate).map((day) => (
-            <div key={day.toISOString()} style={{ border: '1px solid #ddd', padding: 8 }}>
-              <strong>{day.getDate()}</strong>
+        <div className="calendar-scroll">
+          <div
+            className="calendar-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, minmax(160px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {buildMonthDates(baseDate).map((day) => (
+              <div key={day.toISOString()} className="calendar-month-cell card-item">
+                <div style={{ marginBottom: 8 }}>
+                  <strong>{day.getDate()}</strong>
+                </div>
 
-              {bookings
-                .filter((b) =>
-                  isSameCalendarDay(new Date(b.startAt), day)
-                )
-                .map((b) => (
-                  <div key={b.id}>
-                    {b.room.name} — {formatTime(new Date(b.startAt))}
-                    <Link href={buildEditBookingHref(b.id)}>
-                      Edit
-                    </Link>
-                  </div>
-                ))}
-            </div>
-          ))}
+                <div className="card-list">
+                  {bookings
+                    .filter((booking) =>
+                      isSameCalendarDay(new Date(booking.startAt), day)
+                    )
+                    .map((booking) => (
+                      <div key={booking.id} className="booking-chip">
+                        <div>
+                          <strong>{booking.room.name}</strong>
+                        </div>
+                        <div>{formatTime(new Date(booking.startAt))}</div>
+                        <div className="inline-actions" style={{ marginTop: 6 }}>
+                          <Link href={buildEditBookingHref(booking.id)}>Edit</Link>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
