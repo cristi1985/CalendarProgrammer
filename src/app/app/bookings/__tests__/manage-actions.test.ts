@@ -362,4 +362,35 @@ describe('booking manage actions', () => {
     })
     expect(revalidatePathMock).toHaveBeenCalledWith('/app/bookings')
   })
+
+  it('rejects cancelling a booking from a previous day', async () => {
+  syncAuthenticatedUserMock.mockResolvedValue({
+    user: { id: 'user-1' },
+    tenantUser: { tenantId: 'tenant-1', role: 'owner', isPermanent: false },
+  })
+
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(10, 0, 0, 0)
+
+  const yesterdayEnd = new Date(yesterday)
+  yesterdayEnd.setHours(11, 0, 0, 0)
+
+  dbMock.booking.findFirst.mockResolvedValue({
+    id: 'booking-1',
+    tenantId: 'tenant-1',
+    userId: 'user-1',
+    startAt: yesterday,
+    endAt: yesterdayEnd,
+    roomId: 'room-1',
+    type: 'hourly',
+  })
+
+  const formData = new FormData()
+  formData.set('bookingId', 'booking-1')
+
+  await expect(cancelBooking(formData)).rejects.toThrow(
+    'Past bookings can only be cancelled on the same calendar day.'
+  )
+})
 })

@@ -88,6 +88,9 @@ function canCancelWithoutNotice(isPermanent: boolean, role: string) {
 export async function cancelBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()
 
+
+
+
   if (!result) {
     redirect('/signin')
   }
@@ -103,7 +106,7 @@ export async function cancelBooking(formData: FormData) {
   }
 
   const booking = await getManagedBooking(bookingId, result.tenantUser.tenantId)
-
+  const now = new Date()
   if (!booking) {
     throw new Error('Booking not found.')
   }
@@ -122,6 +125,10 @@ export async function cancelBooking(formData: FormData) {
     if (diff <= noticeWindowMs) {
       throw new Error('Bookings can only be cancelled more than 24 hours in advance.')
     }
+  }
+
+  if(booking.startAt < now && !isSameCalendarDay(booking.startAt, now)) {
+    throw new Error('Past bookings can only be cancelled on the same calendar day.')
   }
 
   await db.booking.delete({
