@@ -1,92 +1,250 @@
-import { db } from "@/lib/db";
-import { syncAuthenticatedUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { db } from '@/lib/db'
+import { syncAuthenticatedUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+
+type SearchParams = {
+  month?: string
+}
+
+function formatMonthInput(date: Date) {
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  return `${year}-${month}`
+}
+
+function getSelectedMonth(month?: string) {
+  if (!month) {
+    return new Date()
+  }
+
+  const parsed = new Date(`${month}-01T00:00:00`)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date()
+  }
+
+  return parsed
+}
 
 function getMonthBounds(date: Date) {
-    const start = new Date(date.getFullYear(), date.getMonth(), 1);
-    start.setHours(0, 0, 0, 0);
+  const start = new Date(date.getFullYear(), date.getMonth(), 1)
+  start.setHours(0, 0, 0, 0)
 
-    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    end.setHours(23, 59, 59, 999);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+  end.setHours(23, 59, 59, 999)
 
-    return { start, end };
+  return { start, end }
 }
 
-function getBookedHours(bookings: Array<{ startAt: Date; endAt: Date }>) {
-    const totalMs = bookings.reduce((sum, booking) => {
-        return sum + (booking.endAt.getTime() - booking.startAt.getTime()) / (1000 * 60 * 60);
-    }, 0)
-    return totalMs;
+function getHours(startAt: Date, endAt: Date) {
+  return (endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60)
 }
 
-export default async function ProfilePage() {
-    const result = await syncAuthenticatedUser();
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}) {
+  const result = await syncAuthenticatedUser()
 
-    if(!result) {
-        redirect('/signin');
-    }
-    if(!result.tenantUser) {
-        redirect('/onboarding');
-    }
+  if (!result) {
+    redirect('/signin')
+  }
 
-    const now = new Date();
-    const { start, end } = getMonthBounds(now);
+  if (!result.tenantUser) {
+    redirect('/onboarding')
+  }
 
+  const selectedMonthDate = getSelectedMonth(searchParams.month)
+  const { start, end } = getMonthBounds(selectedMonthDate)
+  const isOwner = result.tenantUser.role === 'owner'
+
+  if (!isOwner) {
     const bookings = await db.booking.findMany({
-        where: {
-            tenantId: result.tenantUser.tenantId,
-            userId: result.user.id,
-            startAt: {
-                gte: start,
-            },
-            endAt: {
-                lte: end,
-            },
-        },
-        orderBy: {
-            startAt: 'asc',
-        },
+      where: {
+        tenantId: result.tenantUser.tenantId,
+        userId: result.user.id,
+        startAt: { gte: start },
+        endAt: { lte: end },
+      },
+      orderBy: {
+        startAt: 'asc',
+      },
     })
 
-    const bookedHours = getBookedHours(bookings);
+    const bookedHours = bookings.reduce(
+      (sum, booking) =>
+        sum + getHours(new Date(booking.startAt), new Date(booking.endAt)),
+      0
+    )
 
     return (
-        <div className="stack">
+      <div className="stack">
+        <div>
+          <h1 className="page-title">Profile</h1>
+          <p className="muted">View your booked hours by month.</p>
+        </div>
+
+        <section className="card-item">
+          <h2 className="section-title">User details</h2>
+          <div className="stack">
             <div>
-                <h1 className="page-title">Profile</h1>
-                <p className="muted">View your account details and monthly booked hours</p>
+              <strong>Name:</strong> {result.user.fullName}
+            </div>
+            <div>
+              <strong>Email:</strong> {result.user.email}
+            </div>
+            <div>
+              <strong>Workspace role:</strong> {result.tenantUser.role}
+            </div>
+            <div>
+              <strong>Permanent user:</strong>{' '}
+              {result.tenantUser.isPermanent ? 'Yes' : 'No'}
+            </div>
+          </div>
+        </section>
+
+        <section className="card-item">
+          <h2 className="section-title">Booked hours by month</h2>
+
+          <form method="get" className="stack" style={{ marginBottom: 16 }}>
+            <div className="form-grid">
+              <div>
+                <label className="muted">Month</label>
+                <input
+                  className="input"
+                  type="month"
+                  name="month"
+                  defaultValue={formatMonthInput(selectedMonthDate)}
+                />
+              </div>
             </div>
 
-            <section className="card-item">
-                <h2 className="section-title">User details</h2>
-                <div className="stack">
-                    <div>
-                        <strong>Name:</strong> {result.user.fullName}
-                    </div>
-                    <div>
-                        <strong>Email:</strong> {result.user.email}
-                    </div>
-                    <div>
-                        <strong>Role:</strong> {result.tenantUser.role}
-                    </div>
-                    <div>
-                        <strong>Permanent user:</strong> {result.tenantUser.isPermanent ? 'Yes' : 'No'}
-                    </div>
-                </div>
-            </section>
+            <div>
+              <button className="button" type="submit">
+                View month
+              </button>
+            </div>
+          </form>
 
-            <section className="card-item">
-                <h2 className="section-title">This month's bookings</h2>
-                <div className="stack">
-                    <div>
-                        <strong>Bookings this month:</strong> {bookings.length}
-                     </div>
-                </div>
-                <div>
-                    <strong>Hours booked this month:</strong> {' '}
-                    {bookedHours % 1 === 0 ? bookedHours: bookedHours.toFixed(1)} hours
-                </div>
-            </section>         
+          <div className="stack">
+            <div>
+              <strong>Bookings in selected month:</strong> {bookings.length}
+            </div>
+            <div>
+              <strong>Hours booked in selected month:</strong>{' '}
+              {bookedHours % 1 === 0 ? bookedHours : bookedHours.toFixed(1)}
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  const tenantUsers = await db.tenantUser.findMany({
+    where: {
+      tenantId: result.tenantUser.tenantId,
+    },
+    include: {
+      user: true,
+    },
+    orderBy: {
+      user: {
+        fullName: 'asc',
+      },
+    },
+  })
+
+  const bookings = await db.booking.findMany({
+    where: {
+      tenantId: result.tenantUser.tenantId,
+      startAt: { gte: start },
+      endAt: { lte: end },
+    },
+    include: {
+      user: true,
+    },
+    orderBy: {
+      startAt: 'asc',
+    },
+  })
+
+  const summary = tenantUsers.map((tenantUser) => {
+    const userBookings = bookings.filter(
+      (booking) => booking.userId === tenantUser.userId
+    )
+
+    const hours = userBookings.reduce(
+      (sum, booking) =>
+        sum + getHours(new Date(booking.startAt), new Date(booking.endAt)),
+      0
+    )
+
+    return {
+      id: tenantUser.userId,
+      fullName: tenantUser.user.fullName,
+      email: tenantUser.user.email,
+      role: tenantUser.role,
+      isPermanent: tenantUser.isPermanent,
+      bookingsCount: userBookings.length,
+      hours,
+    }
+  })
+
+  return (
+    <div className="stack">
+      <div>
+        <h1 className="page-title">Profile</h1>
+        <p className="muted">
+          Billing overview for your workspace by month.
+        </p>
+      </div>
+
+      <section className="card-item">
+        <h2 className="section-title">Workspace owner view</h2>
+
+        <form method="get" className="stack" style={{ marginBottom: 16 }}>
+          <div className="form-grid">
+            <div>
+              <label className="muted">Month</label>
+              <input
+                className="input"
+                type="month"
+                name="month"
+                defaultValue={formatMonthInput(selectedMonthDate)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button className="button" type="submit">
+              View summary
+            </button>
+          </div>
+        </form>
+
+        <div className="card-list">
+          {summary.map((item) => (
+            <div key={item.id} className="card-item">
+              <div>
+                <strong>{item.fullName}</strong>
+              </div>
+              <div className="muted">{item.email}</div>
+              <div className="muted">Role: {item.role}</div>
+              <div className="muted">
+                Permanent: {item.isPermanent ? 'Yes' : 'No'}
+              </div>
+              <div>
+                <strong>Bookings:</strong> {item.bookingsCount}
+              </div>
+              <div>
+                <strong>Hours:</strong>{' '}
+                {item.hours % 1 === 0 ? item.hours : item.hours.toFixed(1)}
+              </div>
+            </div>
+          ))}
         </div>
-    );
+      </section>
+    </div>
+  )
 }
