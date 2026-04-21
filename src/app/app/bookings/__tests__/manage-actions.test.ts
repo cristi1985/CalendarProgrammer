@@ -46,6 +46,196 @@ describe('booking manage actions', () => {
     vi.clearAllMocks()
   })
 
+    it('rejects cancelling a booking that does not exist', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    dbMock.booking.findFirst.mockResolvedValue(null)
+
+    const formData = new FormData()
+    formData.set('bookingId', 'missing-booking')
+
+    await expect(cancelBooking(formData)).rejects.toThrow('Booking not found.')
+  })
+
+  it('rejects cancelling another user booking when not admin or owner', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    dbMock.booking.findFirst.mockResolvedValue({
+      id: 'booking-1',
+      tenantId: 'tenant-1',
+      userId: 'user-2',
+      startAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+      endAt: new Date(Date.now() + 49 * 60 * 60 * 1000),
+      roomId: 'room-1',
+      type: 'hourly',
+    })
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+
+    await expect(cancelBooking(formData)).rejects.toThrow(
+      'You are not allowed to cancel this booking.'
+    )
+  })
+
+  it('rejects updating a booking that does not exist', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    dbMock.booking.findFirst.mockResolvedValue(null)
+
+    const formData = new FormData()
+    formData.set('bookingId', 'missing-booking')
+    formData.set('roomId', 'room-1')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '10:00')
+    formData.set('endTime', '11:00')
+
+    await expect(updateBooking(formData)).rejects.toThrow('Booking not found.')
+  })
+
+  it('rejects updating a booking with invalid half-hour step', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+    formData.set('roomId', 'room-1')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '10:15')
+    formData.set('endTime', '11:00')
+
+    await expect(updateBooking(formData)).rejects.toThrow(
+      'Bookings must start and end on the hour or half hour.'
+    )
+  })
+
+  it('rejects updating a booking outside working hours', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+    formData.set('roomId', 'room-1')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '07:00')
+    formData.set('endTime', '08:00')
+
+    await expect(updateBooking(formData)).rejects.toThrow(
+      'Bookings must be within working hours 08:00-21:00.'
+    )
+  })
+
+  it('rejects updating another user booking when not admin or owner', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    dbMock.booking.findFirst.mockResolvedValue({
+      id: 'booking-1',
+      tenantId: 'tenant-1',
+      userId: 'user-2',
+      startAt: new Date('2025-01-01T10:00:00'),
+      endAt: new Date('2025-01-01T11:00:00'),
+      roomId: 'room-1',
+      type: 'hourly',
+    })
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+    formData.set('roomId', 'room-1')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '12:00')
+    formData.set('endTime', '13:00')
+
+    await expect(updateBooking(formData)).rejects.toThrow(
+      'You are not allowed to modify this booking.'
+    )
+  })
+
+  it('rejects updating when room does not exist in tenant', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    dbMock.booking.findFirst.mockResolvedValue({
+      id: 'booking-1',
+      tenantId: 'tenant-1',
+      userId: 'user-1',
+      startAt: new Date('2025-01-01T10:00:00'),
+      endAt: new Date('2025-01-01T11:00:00'),
+      roomId: 'room-1',
+      type: 'hourly',
+    })
+
+    dbMock.room.findFirst.mockResolvedValue(null)
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+    formData.set('roomId', 'room-x')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '12:00')
+    formData.set('endTime', '13:00')
+
+    await expect(updateBooking(formData)).rejects.toThrow(
+      'Selected room does not exist in this workspace.'
+    )
+  })
+
+  it('rejects updating when overlap exists', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue({
+      user: { id: 'user-1' },
+      tenantUser: { tenantId: 'tenant-1', role: 'member', isPermanent: false },
+    })
+
+    dbMock.booking.findFirst
+      .mockResolvedValueOnce({
+        id: 'booking-1',
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        startAt: new Date('2025-01-01T10:00:00'),
+        endAt: new Date('2025-01-01T11:00:00'),
+        roomId: 'room-1',
+        type: 'hourly',
+      })
+      .mockResolvedValueOnce({
+        id: 'booking-2',
+        tenantId: 'tenant-1',
+        roomId: 'room-1',
+      })
+
+    dbMock.room.findFirst.mockResolvedValue({
+      id: 'room-1',
+      tenantId: 'tenant-1',
+      name: 'Room 1',
+    })
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+    formData.set('roomId', 'room-1')
+    formData.set('date', '2025-01-01')
+    formData.set('startTime', '12:00')
+    formData.set('endTime', '13:00')
+
+    await expect(updateBooking(formData)).rejects.toThrow(
+      'Booking overlaps an existing reservation.'
+    )
+  })
+
   it('blocks regular users from cancelling within 24 hours', async () => {
     syncAuthenticatedUserMock.mockResolvedValue({
       user: { id: 'user-1' },
