@@ -9,6 +9,7 @@ const links = [
   { href: '/app/bookings', label: 'Bookings' },
   { href: '/app/settings/rooms', label: 'Rooms' },
   { href: '/app/settings/invitations', label: 'Invitations' },
+  { href: '/app/profile', label: 'Profile' },
 ]
 
 export default function AppNav() {

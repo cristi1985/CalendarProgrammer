@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { logout } from './actions'
-import AppNav from './AppNav'
+import AppNav from './appnav'
 
 export default async function AppLayout({
   children,
