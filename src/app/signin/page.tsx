@@ -83,6 +83,9 @@ export default function SignInPage() {
             {loading ? 'Signing in...' : 'Sign in with email'}
           </button>
         </form>
+        <p className="muted">
+          <Link href="/forgot-password">Forgot your password?</Link>
+        </p>
 
         <hr className="auth-divider" />
 
