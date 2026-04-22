@@ -2,6 +2,12 @@ import { db } from '@/lib/db'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+function extractProviders(authUser: { app_metadata?: { provider?: string; providers?: string[] } }) {
+  const providers = authUser.app_metadata?.providers ?? []
+  const provider = authUser.app_metadata?.provider ?? providers[0] ?? 'null'
+  return({ authProvider: provider, providers, })
+}
+
 export function createServerSupabaseClient() {
   const cookieStore = cookies()
 
@@ -53,9 +59,11 @@ export async function syncAuthenticatedUser() {
     authUser.user_metadata?.name ||
     authUser.email.split('@')[0]
 
+  const { authProvider, providers } = extractProviders(authUser)
+
   const user = await db.user.upsert({
     where: { email: authUser.email },
-    update: { fullName },
+    update: { fullName, authProvider, providers },
     create: {
       email: authUser.email,
       fullName,
