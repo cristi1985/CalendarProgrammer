@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 
 function extractProviders(authUser: { app_metadata?: { provider?: string; providers?: string[] } }) {
   const providers = authUser.app_metadata?.providers ?? []
-  const provider = authUser.app_metadata?.provider ?? providers[0] ?? 'null'
+  const provider = authUser.app_metadata?.provider ?? providers[0] ?? null
   return({ authProvider: provider, providers, })
 }
 
@@ -67,6 +67,8 @@ export async function syncAuthenticatedUser() {
     create: {
       email: authUser.email,
       fullName,
+      authProvider,
+      providers,
     },
   })
 
@@ -121,6 +123,8 @@ export async function syncAuthenticatedUser() {
   return {
     authUser,
     user,
+    providers,
+    authProvider,
     tenantUser,
   }
 }
