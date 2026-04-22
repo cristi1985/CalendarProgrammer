@@ -6,6 +6,27 @@ type SearchParams = {
   month?: string
 }
 
+function getuserProviders(user: { authProvider?: string | null; providers?: string[] | null }) {
+    const providers = user.providers ?? []
+    const authProvider = user.authProvider ?? 'null'
+    return {
+        providers,
+        authProvider,
+        hasEmailProvider: providers.includes('email'),
+        hasGoogleProvider: providers.includes('google'),
+    }
+}
+
+function formatProviders(providers: string[]) {
+    if (providers.length === 0) {
+        return 'No providers'
+    }
+
+    return providers.join(',')
+}
+
+
+
 function formatMonthInput(date: Date) {
   const year = date.getFullYear()
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
@@ -58,6 +79,7 @@ export default async function ProfilePage({
   const selectedMonthDate = getSelectedMonth(searchParams.month)
   const { start, end } = getMonthBounds(selectedMonthDate)
   const isOwner = result.tenantUser.role === 'owner'
+  const providersInfo = getuserProviders(result.user)
 
   if (!isOwner) {
     const bookings = await db.booking.findMany({
@@ -101,6 +123,18 @@ export default async function ProfilePage({
               <strong>Permanent user:</strong>{' '}
               {result.tenantUser.isPermanent ? 'Yes' : 'No'}
             </div>
+            <div>
+                <strong>Sign-in methods:</strong> {formatProviders(providersInfo.providers)}
+                </div>
+                <div>
+                <strong>Password reset available:</strong>{' '}
+                {providersInfo.hasEmailProvider ? 'Yes' : 'No'}
+                </div>
+                {!providersInfo.hasEmailProvider && providersInfo.hasGoogleProvider && (
+                <div className="muted">
+                    This account uses Google sign-in. Use Google to access your account.
+                </div>
+                )}
           </div>
         </section>
 
@@ -201,6 +235,29 @@ export default async function ProfilePage({
       </div>
 
       <section className="card-item">
+        <section className="card-item">
+            <h2 className="section-title">Your account</h2>
+            <div className="stack">
+                <div>
+                <strong>Name:</strong> {result.user.fullName}
+                </div>
+                <div>
+                <strong>Email:</strong> {result.user.email}
+                </div>
+                <div>
+                <strong>Sign-in methods:</strong> {formatProviders(providersInfo.providers)}
+                </div>
+                <div>
+                <strong>Password reset available:</strong>{' '}
+                {providersInfo.hasEmailProvider ? 'Yes' : 'No'}
+                </div>
+                {!providersInfo.hasEmailProvider && providersInfo.hasGoogleProvider && (
+                <div className="muted">
+                    This account uses Google sign-in. Password reset is not available.
+                </div>
+                )}
+            </div>
+        </section>
         <h2 className="section-title">Workspace owner view</h2>
 
         <form method="get" className="stack" style={{ marginBottom: 16 }}>
