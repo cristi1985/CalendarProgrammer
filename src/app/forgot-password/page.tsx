@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
         return
     }
 
-    setMessage("Password reset email sent!")
+    setMessage("If that account supports password reset, a reset link has been sent.")
     }
 
     return (
@@ -62,6 +62,10 @@ export default function ForgotPasswordPage() {
                         Back to <Link href="/signin">Sign in</Link>
                     </p>
                 </form>
+                    <p className="muted">
+                        Password reset is available for accounts that use email and password sign-in.
+                        If you use Google, sign in with Google instead.
+                    </p>
             </div>
         </div>
     )

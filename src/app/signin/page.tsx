@@ -86,6 +86,10 @@ export default function SignInPage() {
         <p className="muted">
           <Link href="/forgot-password">Forgot your password?</Link>
         </p>
+        <p className="muted">
+          Forgot password works only for email/password accounts. Google users should
+          sign in with Google.
+        </p>
 
         <hr className="auth-divider" />
 
