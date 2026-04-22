@@ -262,9 +262,11 @@ export default async function ProfilePage({
                 )}
             </div>
         </section>
-        <h2 className="section-title">Workspace owner view</h2>
-
-        <form method="get" className="stack" style={{ marginBottom: 16 }}>
+        <section className="card-item">
+        <div>
+           <h2 className="section-title">Workspace owner view</h2>         
+        </div>
+            <form method="get" className="stack" style={{ marginBottom: 16 }}>
           <div className="form-grid">
             <div>
               <label className="muted">Month</label>
@@ -305,6 +307,11 @@ export default async function ProfilePage({
             </div>
           ))}
         </div>
+        </section>
+        
+        
+
+        
       </section>
     </div>
   )
