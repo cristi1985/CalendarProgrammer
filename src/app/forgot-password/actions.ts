@@ -17,15 +17,15 @@ export async function requestPasswordReset(formData: FormData) {
         email: normalizedEmail,
      },
      select: {
-       provider: true,
+       authProvider: true,
+       providers: true,
      },
   })
 
   const hasEmailProvider = user?.providers?.includes('email') ?? false
 
-  if (!hasEmailProvider) {
+  if (hasEmailProvider) {
     const supabase = createServerSupabaseClient()
-
     await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`
     })
