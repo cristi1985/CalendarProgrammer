@@ -6,18 +6,18 @@ type SearchParams = {
   month?: string
 }
 
-function getUserProviders(user: {
-  authProvider?: string | null
+function getUserProviders(
+  authProvider?: string | null,
   providers?: string[] | null
-}) {
-  const providers = user.providers ?? []
-  const authProvider = user.authProvider ?? null
+) {
+  const safeProviders = providers ?? []
+  const safeAuthProvider = authProvider ?? null
 
   return {
-    providers,
-    authProvider,
-    hasEmailProvider: providers.includes('email'),
-    hasGoogleProvider: providers.includes('google'),
+    providers: safeProviders,
+    authProvider: safeAuthProvider,
+    hasEmailProvider: safeProviders.includes('email'),
+    hasGoogleProvider: safeProviders.includes('google'),
   }
 }
 
@@ -83,7 +83,7 @@ export default async function ProfilePage({
   const selectedMonthDate = getSelectedMonth(searchParams.month)
   const { start, end } = getMonthBounds(selectedMonthDate)
   const isOwner = result.tenantUser.role === 'owner'
-  const providersInfo = getUserProviders(result.user)
+  const providersInfo = getUserProviders(result.authProvider, result.providers)
 
   if (!isOwner) {
     const bookings = await db.booking.findMany({
