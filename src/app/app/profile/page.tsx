@@ -83,7 +83,7 @@ export default async function ProfilePage({
   const selectedMonthDate = getSelectedMonth(searchParams.month)
   const { start, end } = getMonthBounds(selectedMonthDate)
   const isOwner = result.tenantUser.role === 'owner'
-  const providersInfo = getUserProviders(result.authProvider, result.providers)
+  const providersInfo = getUserProviders(result.user.authProvider, result.user.providers)
 
   if (!isOwner) {
     const bookings = await db.booking.findMany({
@@ -283,6 +283,7 @@ export default async function ProfilePage({
             <button className="button" type="submit">
               View summary
             </button>
+            <a className="nav-link" href={`/app/profile/export?month=${formatMonthInput(selectedMonthDate)}`}>Export CSV</a>
           </div>
         </form>
 

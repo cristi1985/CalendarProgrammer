@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { sendInvitationEmail } from '@/lib/email'
 
 export async function createInvitation(formData: FormData) {
   const result = await syncAuthenticatedUser()
@@ -32,13 +33,27 @@ export async function createInvitation(formData: FormData) {
     throw new Error('A valid role is required.')
   }
 
+  const normalizedEmail = email.trim().toLowerCase()
+
   await db.invitation.create({
     data: {
       tenantId: result.tenantUser.tenantId,
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       role,
       isPermanent,
     },
+  })
+
+  const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const inviteUrl = `${appUrl}/signup?email=${encodeURIComponent(normalizedEmail)}`
+
+  await sendInvitationEmail({
+    to: normalizedEmail,
+    workspaceName: result.tenantUser.tenant.name,
+    invitedByName: result.user.fullName,
+    role,
+    isPermanent,
+    inviteUrl,
   })
 
   revalidatePath('/app/settings/invitations')
