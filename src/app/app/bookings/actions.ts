@@ -5,7 +5,7 @@ import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
-import { getErrorMessage } from '@/lib/action-state'
+import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -131,6 +131,9 @@ export async function createBookingAction (_previousState: ActionState, formData
     await createBooking(formData)
     return { ok: true, message: 'Booking created successfully.' }
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
     return { ok: false, message: getErrorMessage(error) }
   }
 }

@@ -5,7 +5,7 @@ import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
-import { getErrorMessage } from '@/lib/action-state'
+import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -157,6 +157,9 @@ export async function updateBookingAction(_previousState: ActionState, formData:
     await updateBooking(formData)
     return { ok: true, message: 'Booking updated successfully.' }
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
     return { ok: false, message: getErrorMessage(error) }
   }
 }
@@ -166,6 +169,9 @@ export async function cancelBookingAction(_previousState: ActionState, formData:
     await cancelBooking(formData)
     return { ok: true, message: 'Booking cancelled successfully.' }
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
     return { ok: false, message: getErrorMessage(error) }
   }
 }
