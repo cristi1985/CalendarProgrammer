@@ -3,6 +3,7 @@ import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { logout } from './actions'
 import AppNav from './appnav'
+import ThemeSelector from './ThemeSelector'
 
 export default async function AppLayout({
   children,
@@ -32,6 +33,8 @@ export default async function AppLayout({
             <AppNav />
 
             <div className="nav-spacer" />
+
+            <ThemeSelector />
 
             <form action={logout}>
               <button type="submit" className="secondary">
