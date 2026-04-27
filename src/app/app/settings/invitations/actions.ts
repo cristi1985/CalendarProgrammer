@@ -5,6 +5,8 @@ import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { sendInvitationEmail } from '@/lib/email'
+import type { ActionState } from '@/lib/action-state'
+import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 
 export async function createInvitation(formData: FormData) {
   const result = await syncAuthenticatedUser()
@@ -26,11 +28,11 @@ export async function createInvitation(formData: FormData) {
   const isPermanent = formData.get('isPermanent') === 'on'
 
   if (typeof email !== 'string' || !email.includes('@')) {
-    throw new Error('A valid email is required.')
+    throw new Error('Please enter a valid email address.')
   }
 
   if (role !== 'owner' && role !== 'admin' && role !== 'member') {
-    throw new Error('A valid role is required.')
+    throw new Error('Please select a valid role.')
   }
 
   const normalizedEmail = email.trim().toLowerCase()
@@ -44,7 +46,7 @@ export async function createInvitation(formData: FormData) {
     },
   })
 
-  const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const inviteUrl = `${appUrl}/signup?email=${encodeURIComponent(normalizedEmail)}`
 
   await sendInvitationEmail({
@@ -57,4 +59,27 @@ export async function createInvitation(formData: FormData) {
   })
 
   revalidatePath('/app/settings/invitations')
+}
+
+export async function createInvitationAction(
+  _previousState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    await createInvitation(formData)
+
+    return {
+      ok: true,
+      message: 'Invitation sent successfully.',
+    }
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
+
+    return {
+      ok: false,
+      message: getErrorMessage(error),
+    }
+  }
 }
