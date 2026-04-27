@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import type { ActionState } from '@/lib/action-state'
+import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 
 export async function createRoom(formData: FormData) {
   const result = await syncAuthenticatedUser()
@@ -34,6 +36,29 @@ export async function createRoom(formData: FormData) {
   })
 
   revalidatePath('/app/settings/rooms')
+}
+
+export async function createRoomAction(
+  _previousState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    await createRoom(formData)
+
+    return {
+      ok: true,
+      message: 'Room created successfully.',
+    }
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
+
+    return {
+      ok: false,
+      message: getErrorMessage(error),
+    }
+  }
 }
 
 export async function deleteRoom(formData: FormData) {
@@ -87,4 +112,27 @@ export async function deleteRoom(formData: FormData) {
   })
 
   revalidatePath('/app/settings/rooms')
+}
+
+export async function deleteRoomAction(
+  _previousState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    await deleteRoom(formData)
+
+    return {
+      ok: true,
+      message: 'Room deleted successfully.',
+    }
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
+
+    return {
+      ok: false,
+      message: getErrorMessage(error),
+    }
+  }
 }
