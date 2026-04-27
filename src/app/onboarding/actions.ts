@@ -3,6 +3,8 @@
 import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import type { ActionState } from '@/lib/action-state'
+import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 
 function slugify(value: string) {
   return value
@@ -61,4 +63,27 @@ export async function createWorkspace(formData: FormData) {
   })
 
   redirect('/app')
+}
+
+export async function createWorkspaceAction(
+  _previousState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    await createWorkspace(formData)
+
+    return {
+      ok: true,
+      message: 'Workspace created successfully.',
+    }
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error
+    }
+
+    return {
+      ok: false,
+      message: getErrorMessage(error),
+    }
+  }
 }
