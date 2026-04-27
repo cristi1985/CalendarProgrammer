@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import type { ActionState } from '@/lib/action-state'
+import { getErrorMessage } from '@/lib/action-state'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -149,6 +151,25 @@ function combineDateAndTime(date: string, time: string) {
 
   return value
 }
+
+export async function updateBookingAction(_previousState: ActionState, formData: FormData): Promise<ActionState> {
+  try{
+    await updateBooking(formData)
+    return { ok: true, message: 'Booking updated successfully.' }
+  } catch (error) {
+    return { ok: false, message: getErrorMessage(error) }
+  }
+}
+
+export async function cancelBookingAction(_previousState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await cancelBooking(formData)
+    return { ok: true, message: 'Booking cancelled successfully.' }
+  } catch (error) {
+    return { ok: false, message: getErrorMessage(error) }
+  }
+}
+
 
 export async function updateBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()

@@ -4,7 +4,8 @@ import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { date } from 'zod/v4'
+import type { ActionState } from '@/lib/action-state'
+import { getErrorMessage } from '@/lib/action-state'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -123,6 +124,15 @@ function combineDateAndTime(date: string, time: string) {
 
   return value
 
+}
+
+export async function createBookingAction (_previousState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await createBooking(formData)
+    return { ok: true, message: 'Booking created successfully.' }
+  } catch (error) {
+    return { ok: false, message: getErrorMessage(error) }
+  }
 }
 
 export async function createBooking(formData: FormData) {
