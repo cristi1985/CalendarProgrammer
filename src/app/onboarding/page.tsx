@@ -1,5 +1,4 @@
-import { createWorkspace } from "./actions"
-
+import { OnboardingForm } from "./OnboardingForm"
 
 export default function OnboardingPage() {
   return (
@@ -12,17 +11,7 @@ export default function OnboardingPage() {
 
         <h2 className="section-title">Create a workspace</h2>
 
-        <form action={createWorkspace} className="stack">
-          <input
-            className="input"
-            name="name"
-            placeholder="Workspace name"
-            required
-          />
-          <button className="button" type="submit">
-            Create workspace
-          </button>
-        </form>
+        <OnboardingForm />
 
         <hr className="auth-divider" />
 
