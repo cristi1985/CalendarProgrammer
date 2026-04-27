@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 function getSelectedMonth(month?: string) {
   if (!month) {
     return new Date()
@@ -48,6 +50,15 @@ function textResponse(message: string, status: number) {
       'Content-Type': 'text/plain; charset=utf-8',
     },
   })
+}
+
+function isDynamicServerError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'digest' in error &&
+    (error as { digest?: unknown }).digest === 'DYNAMIC_SERVER_USAGE'
+  )
 }
 
 export async function GET(request: Request) {
@@ -129,6 +140,10 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
+    if (isDynamicServerError(error)) {
+      throw error
+    }
+
     console.error('Failed to export CSV report', error)
 
     return textResponse(
