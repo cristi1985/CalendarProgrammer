@@ -33,18 +33,13 @@ import { BookingForms } from '../BookingForms'
 
 describe('BookingForms calendar preselection', () => {
   it('preselects room, date and start time when opened from calendar link', () => {
-    render(
-      <BookingForms
-        rooms={[
-          { id: 'room-1', name: 'Room 1' },
-          { id: 'room-2', name: 'Room 2' },
-        ]}
-        bookings={[]}
-      />
-    )
+    vi.mock('next/navigation', () => ({
+        useSearchParams: () => new URLSearchParams('roomId=room-2&startAt=2026-05-12T10:30'),
+      }));
 
     expect(screen.getByRole('combobox', { name: /room/i })).toHaveValue('room-2')
     expect(screen.getByLabelText(/date/i)).toHaveValue('2026-05-12')
     expect(screen.getByLabelText(/start time/i)).toHaveValue('10:30')
+    expect(screen.getByLabelText(/end time/i)).toHaveValue('11:30')
   })
 })

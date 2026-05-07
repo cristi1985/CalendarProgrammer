@@ -105,7 +105,8 @@ export function BookingForms({
 
         <form action={createFormAction} className="stack">
           <div className="form-grid">
-            <select className="select" name="roomId" defaultValue={initialBookingValues.roomId} required>
+            <label className="muted" htmlFor="roomId">Room</label>
+            <select id="roomId" className="select" name="roomId" defaultValue={initialBookingValues.roomId} required>
               <option value="">Select room</option>
               {rooms.map((room) => (
                 <option key={room.id} value={room.id}>
