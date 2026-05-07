@@ -3,6 +3,7 @@
 import { useFormState } from 'react-dom'
 import { initialActionState } from '@/lib/action-state'
 import { createRoomAction, deleteRoomAction } from './actions'
+import { useEffect, useRef } from 'react'
 
 type Room = {
   id: string
@@ -15,10 +16,19 @@ export function RoomForms({ rooms }: { rooms: Room[] }) {
     initialActionState
   )
 
+  const createFormRef = useRef<HTMLFormElement>(null)
+  
+
   const [deleteState, deleteFormAction] = useFormState(
     deleteRoomAction,
     initialActionState
   )
+
+  useEffect(() => {
+    if (createState.ok) {
+      createFormRef.current?.reset()
+    }
+  }, [createState])
 
   return (
     <div className="stack">
@@ -37,7 +47,7 @@ export function RoomForms({ rooms }: { rooms: Room[] }) {
       <section className="stack">
         <h2 className="section-title">Create room</h2>
 
-        <form action={createFormAction} className="stack">
+        <form ref={createFormRef} action={createFormAction} className="stack">
           <div className="form-grid">
             <input
               className="input"
