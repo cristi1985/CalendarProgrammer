@@ -25,21 +25,27 @@ vi.mock('../manage-actions', () => ({
   updateBookingAction: vi.fn(),
 }))
 
-vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams('roomId=room-2&startAt=2026-05-12T10:30'),
-}))
 
 import { BookingForms } from '../BookingForms'
 
 describe('BookingForms calendar preselection', () => {
   it('preselects room, date and start time when opened from calendar link', () => {
-    vi.mock('next/navigation', () => ({
-        useSearchParams: () => new URLSearchParams('roomId=room-2&startAt=2026-05-12T10:30'),
-      }));
+   render(
+     <BookingForms
+       rooms={[{ id: 'room-2', name: 'Room 2' }]}
+       bookings={[]}
+       initialBookingValues={{
+         roomId: 'room-2',
+         date: '2026-05-12',
+         startTime: '10:30',
+         endTime: '11:30'
+       }}
+     />
+   )
 
     expect(screen.getByRole('combobox', { name: /room/i })).toHaveValue('room-2')
-    expect(screen.getByLabelText(/date/i)).toHaveValue('2026-05-12')
-    expect(screen.getByLabelText(/start time/i)).toHaveValue('10:30')
-    expect(screen.getByLabelText(/end time/i)).toHaveValue('11:30')
+    expect(document.querySelector('input[name="date"]')).toHaveValue('2026-05-12')
+    expect(document.querySelector('select[name="startTime"]')).toHaveValue('10:30')
+    expect(document.querySelector('select[name="endTime"]')).toHaveValue('11:30')
   })
 })
