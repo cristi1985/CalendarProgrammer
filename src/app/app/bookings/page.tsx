@@ -1,11 +1,56 @@
 import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { buildTimeOptions
- } from '@/lib/booking-rules'
  import{BookingForms} from './BookingForms'
 
-export default async function BookingsPage() {
+type SearchParams = {
+  roomId?: string
+  startAt?: string
+  editBookingId?: string
+}
+
+function parseStartAt(startAt: string ) {
+  if(!startAt) return null
+  const date = new Date(startAt)
+  if(Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  return{
+    date: date.toISOString().slice(0, 10),
+    time: date.toISOString().slice(0, 5)
+  }
+}
+
+function addOneHour(time: string) {
+  const [hours, minutes] = time.split(':').map(Number)
+  const next = new Date()
+  next.setHours(hours + 1, minutes, 0, 0)
+  return next.toTimeString().slice(0, 5)
+}
+
+function getInitialBookingValues(searchParams: SearchParams) {
+  const startAt = searchParams.startAt
+  if(!startAt) {
+    return {
+      roomId: searchParams.roomId ?? '',
+      date: '',
+      startTime: '08:00',
+      endTime: '09:00'
+    }
+  }
+
+  const[date, time] = startAt.split('T')
+  const startTime = time.slice(0, 5) ?? ''
+
+  return{
+    roomId: searchParams.roomId ?? '',
+    date: date ?? '',
+    startTime,
+    endTime: addOneHour(startTime)
+  }
+}
+export default async function BookingsPage({ searchParams }: { searchParams: SearchParams }) {
   const result = await syncAuthenticatedUser()
 
   if (!result) {
@@ -16,8 +61,8 @@ export default async function BookingsPage() {
     redirect('/onboarding')
   }
 
-  const timeOptions = buildTimeOptions()
-
+  
+  const initialBookingValues = getInitialBookingValues(searchParams)
   const rooms = await db.room.findMany({
     where: {
       tenantId: result.tenantUser.tenantId,
@@ -47,7 +92,7 @@ export default async function BookingsPage() {
         <h1 className="page-title">Bookings</h1>
       </div>
 
-      <BookingForms rooms={rooms} bookings={bookings} />
+      <BookingForms rooms={rooms} bookings={bookings} initialBookingValues={initialBookingValues} />
     </div>
   )
   

@@ -24,6 +24,13 @@ type Booking = {
     }
 }
 
+type InitialBookingValues = {
+  roomId: string
+  date: string
+  startTime: string
+  endTime: string
+}
+
 function buildTimeOptions() {
   const options:string[] = []
 
@@ -53,9 +60,11 @@ function toTimeInputValue(date: Date) {
 export function BookingForms({
   rooms,
   bookings,
+  initialBookingValues
 }: {
   rooms: Room[]
   bookings: Booking[]
+  initialBookingValues: InitialBookingValues
 }) {
   const timeOptions = buildTimeOptions()
   const [createState, createFormAction] = useFormState(
@@ -96,7 +105,7 @@ export function BookingForms({
 
         <form action={createFormAction} className="stack">
           <div className="form-grid">
-            <select className="select" name="roomId" required>
+            <select className="select" name="roomId" defaultValue={initialBookingValues.roomId} required>
               <option value="">Select room</option>
               {rooms.map((room) => (
                 <option key={room.id} value={room.id}>
@@ -114,12 +123,12 @@ export function BookingForms({
           <div className="form-grid">
             <div>
               <label className="muted">Date</label>
-              <input className="input" type="date" name="date" required />
+              <input className="input" type="date" name="date" defaultValue={initialBookingValues.date} required />
             </div>
 
             <div>
               <label className="muted">Start time</label>
-              <select className="select" name="startTime" required>
+              <select className="select" name="startTime" defaultValue={initialBookingValues.startTime} required>
                 <option value="">Select start time</option>
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
@@ -131,7 +140,7 @@ export function BookingForms({
 
             <div>
               <label className="muted">End time</label>
-              <select className="select" name="endTime" required>
+              <select className="select" name="endTime" defaultValue={initialBookingValues.endTime} required>
                 <option value="">Select end time</option>
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
