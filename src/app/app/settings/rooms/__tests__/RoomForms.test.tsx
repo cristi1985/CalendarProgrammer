@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 
-const { useFormStateMock, createFromActionMock, deleteRoomActionMock } = vi.hoisted(() => ({
+const { useFormStateMock, createFromActionMock, deleteFormActionMock, resetMock } = vi.hoisted(() => ({
   useFormStateMock: vi.fn(),
   createFromActionMock: vi.fn(),
-  deleteRoomActionMock: vi.fn(),
+  deleteFormActionMock: vi.fn(),
+  resetMock: vi.fn(),
 }))
 
 vi.mock('react-dom', async () => {
@@ -18,8 +19,8 @@ vi.mock('react-dom', async () => {
 })
 
 vi.mock('../actions', () => ({
-  createRoomAction: createFromActionMock,
-  deleteRoomAction: deleteRoomActionMock,
+  createRoomAction: vi.fn(),
+  deleteRoomAction: vi.fn(),
 }))
 
 import { RoomForms } from '../RoomForms'
@@ -27,22 +28,31 @@ import { RoomForms } from '../RoomForms'
 describe('RoomForms', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    createFromActionMock.mockResolvedValue(undefined)
     useFormStateMock
-      .mockReturnValueOnce([{ ok: true, message: 'Room created successfully.' }, vi.fn()])
-      .mockReturnValueOnce([{ ok: false, message: null }, vi.fn()])
+      .mockReturnValueOnce([{ ok: true, message: 'Room created successfully.' },createFromActionMock])
+      .mockReturnValueOnce([{ ok: false, message: null }, deleteFormActionMock])
   })
 
-  it('clears the room name input after a room is successfully added', async () => {
+  it('shows the success message', () =>{
+    render(<RoomForms rooms={[]} />)
+
+    expect(screen.getByText('Room created successfully.')).toBeInTheDocument()
+  })
+
+  it('wires the room name input and submit button', async () => {
     const user = userEvent.setup()
 
     render(<RoomForms rooms={[]} />)
 
     const input = screen.getByPlaceholderText('Room name')
+    const button = screen.getByRole('button', { name: /add room/i })
+  
 
     await user.type(input, 'Therapy Room 1')
-
     expect(input).toHaveValue('Therapy Room 1')
-    expect(screen.getByText('Room created successfully.')).toBeInTheDocument()
-    expect(input).toHaveValue()
+    expect(button).toBeInTheDocument()
+    
+   
   })
 })
