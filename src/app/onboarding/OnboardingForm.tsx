@@ -3,6 +3,7 @@
 import { useFormState } from 'react-dom'
 import { initialActionState } from '@/lib/action-state'
 import { createWorkspaceAction } from './actions'
+import { AutoDismissMessage } from '@/components/AutoDismissMessage'
 
 export function OnboardingForm() {
   const [state, formAction] = useFormState(
@@ -12,11 +13,7 @@ export function OnboardingForm() {
 
   return (
     <div className="stack">
-      {state.message && (
-        <div className={state.ok ? 'success-message' : 'error-message'}>
-          {state.message}
-        </div>
-      )}
+      <AutoDismissMessage message={state.message} ok={state.ok} />
 
       <form action={formAction} className="stack">
         <input

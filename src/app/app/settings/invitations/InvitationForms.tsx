@@ -3,6 +3,7 @@
 import { useFormState } from 'react-dom'
 import { initialActionState } from '@/lib/action-state'
 import { createInvitationAction } from './actions'
+import { AutoDismissMessage } from '@/components/AutoDismissMessage'
 
 type Invitation = {
   id: string
@@ -23,11 +24,7 @@ export function InvitationForms({
 
   return (
     <div className="stack">
-      {state.message && (
-        <div className={state.ok ? 'success-message' : 'error-message'}>
-          {state.message}
-        </div>
-      )}
+      <AutoDismissMessage message={state.message} ok={state.ok} />
 
       <section className="stack">
         <h2 className="section-title">Invite a user</h2>

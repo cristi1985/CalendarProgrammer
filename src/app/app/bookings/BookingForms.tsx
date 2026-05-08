@@ -4,6 +4,7 @@ import { useFormState } from "react-dom"
 import { initialActionState } from "@/lib/action-state"
 import { createBookingAction } from "./actions"
 import { cancelBookingAction, updateBookingAction } from "./manage-actions"
+import { AutoDismissMessage } from "@/components/AutoDismissMessage"
 
 type Room = {
   id: string
@@ -82,23 +83,9 @@ export function BookingForms({
 
   return (
     <div className="stack">
-      {createState.message && (
-        <div className={createState.ok ? 'success-message' : 'error-message'}>
-          {createState.message}
-        </div>
-      )}
-
-      {updateState.message && (
-        <div className={updateState.ok ? 'success-message' : 'error-message'}>
-          {updateState.message}
-        </div>
-      )}
-
-      {cancelState.message && (
-        <div className={cancelState.ok ? 'success-message' : 'error-message'}>
-          {cancelState.message}
-        </div>
-      )}
+      <AutoDismissMessage message={createState.message} ok={createState.ok} />
+      <AutoDismissMessage message={updateState.message} ok={updateState.ok} />
+      <AutoDismissMessage message={cancelState.message} ok={cancelState.ok} />
 
       <section className="stack">
         <h2 className="section-title">Create booking</h2>

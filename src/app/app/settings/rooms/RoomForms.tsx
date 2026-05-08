@@ -4,6 +4,7 @@ import { useFormState } from 'react-dom'
 import { initialActionState } from '@/lib/action-state'
 import { createRoomAction, deleteRoomAction } from './actions'
 import { useRef } from 'react'
+import { AutoDismissMessage } from '@/components/AutoDismissMessage'
 
 type Room = {
   id: string
@@ -31,17 +32,9 @@ export function RoomForms({ rooms }: { rooms: Room[] }) {
 
   return (
     <div className="stack">
-      {createState.message && (
-        <div className={createState.ok ? 'success-message' : 'error-message'}>
-          {createState.message}
-        </div>
-      )}
+      <AutoDismissMessage message={createState.message} ok={createState.ok} />
 
-      {deleteState.message && (
-        <div className={deleteState.ok ? 'success-message' : 'error-message'}>
-          {deleteState.message}
-        </div>
-      )}
+      <AutoDismissMessage message={deleteState.message} ok={deleteState.ok} />
 
       <section className="stack">
         <h2 className="section-title">Create room</h2>
