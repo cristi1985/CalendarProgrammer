@@ -3,7 +3,7 @@
 import { useFormState } from 'react-dom'
 import { initialActionState } from '@/lib/action-state'
 import { createRoomAction, deleteRoomAction } from './actions'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 
 type Room = {
   id: string
@@ -24,11 +24,10 @@ export function RoomForms({ rooms }: { rooms: Room[] }) {
     initialActionState
   )
 
-  useEffect(() => {
-    if (createState.ok) {
-      createFormRef.current?.reset()
-    }
-  }, [createState])
+  async function handleCreateAction(formData: FormData) {
+    await createFormAction(formData)
+    createFormRef.current?.reset()
+  }
 
   return (
     <div className="stack">
@@ -47,7 +46,7 @@ export function RoomForms({ rooms }: { rooms: Room[] }) {
       <section className="stack">
         <h2 className="section-title">Create room</h2>
 
-        <form ref={createFormRef} action={createFormAction} className="stack">
+        <form ref={createFormRef} action={handleCreateAction} className="stack">
           <div className="form-grid">
             <input
               className="input"

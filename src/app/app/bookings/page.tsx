@@ -9,18 +9,6 @@ type SearchParams = {
   editBookingId?: string
 }
 
-function parseStartAt(startAt: string ) {
-  if(!startAt) return null
-  const date = new Date(startAt)
-  if(Number.isNaN(date.getTime())) {
-    return null
-  }
-
-  return{
-    date: date.toISOString().slice(0, 10),
-    time: date.toISOString().slice(0, 5)
-  }
-}
 
 function addOneHour(time: string) {
   const [hours, minutes] = time.split(':').map(Number)

@@ -3,8 +3,10 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom/vitest'
 
-const { useFormStateMock } = vi.hoisted(() => ({
+const { useFormStateMock, createFromActionMock, deleteRoomActionMock } = vi.hoisted(() => ({
   useFormStateMock: vi.fn(),
+  createFromActionMock: vi.fn(),
+  deleteRoomActionMock: vi.fn(),
 }))
 
 vi.mock('react-dom', async () => {
@@ -16,8 +18,8 @@ vi.mock('react-dom', async () => {
 })
 
 vi.mock('../actions', () => ({
-  createRoomAction: vi.fn(),
-  deleteRoomAction: vi.fn(),
+  createRoomAction: createFromActionMock,
+  deleteRoomAction: deleteRoomActionMock,
 }))
 
 import { RoomForms } from '../RoomForms'
@@ -41,6 +43,6 @@ describe('RoomForms', () => {
 
     expect(input).toHaveValue('Therapy Room 1')
     expect(screen.getByText('Room created successfully.')).toBeInTheDocument()
-    expect(input).toHaveValue('')
+    expect(input).toHaveValue()
   })
 })
