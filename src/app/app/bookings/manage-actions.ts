@@ -84,7 +84,7 @@ async function ensureNoOverlapExcludingBooking(
 }
 
 function canCancelWithoutNotice(isPermanent: boolean, role: string) {
-  return isPermanent || role === 'owner' || role === 'admin'
+  return (isPermanent && role === 'member') || role === 'owner' || role === 'admin'
 }
 
 export async function cancelBooking(formData: FormData) {
