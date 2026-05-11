@@ -150,16 +150,9 @@ button.secondary {
   align-items: center;
 }
 
-.nav-link-active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
 
-.nav-link-active:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-}
+
+
 
 .nav-link {
   display: inline-flex;
@@ -176,6 +169,17 @@ button.secondary {
 .nav-link:hover {
   background: var(--primary-soft);
   border-color: var(--border);
+}
+
+.nav-link.nav-link-active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.nav-link.nav-link-active:hover {
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .nav-spacer {
