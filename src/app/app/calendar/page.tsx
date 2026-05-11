@@ -10,6 +10,7 @@ import {
   isSameCalendarDay,
 } from '@/lib/calendar'
 import { redirect } from 'next/navigation'
+import { CalendarFilters } from './CalendarFilters'
 
 type SearchParams = {
   view?: string
@@ -98,37 +99,7 @@ export default async function CalendarPage({
       <div>
         <h1 className="page-title">Calendar</h1>
 
-        <form method="get" className="calendar-toolbar">
-          <select className="select" name="view" defaultValue={view}>
-            <option value="day">Day</option>
-            <option value="week">Week</option>
-            <option value="month">Month</option>
-          </select>
-
-          <input
-            className="input"
-            name="date"
-            type="date"
-            defaultValue={formatDateForInput(baseDate)}
-          />
-
-          <select className="select" name="roomId" defaultValue={searchParams.roomId ?? ''}>
-            <option value="">All rooms</option>
-            {allRooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.name}
-              </option>
-            ))}
-          </select>
-
-          <button className="button" type="submit">
-            Apply
-          </button>
-
-          <Link className="nav-link" href="/app/bookings">
-            Manage bookings
-          </Link>
-        </form>
+        <CalendarFilters view={view} date={formatDateForInput(baseDate)} roomId={searchParams.roomId ??''} rooms={allRooms} />
       </div>
 
       {view === 'day' && (
