@@ -105,20 +105,22 @@ export function BookingForms({
             />
           </div>
           <div className="form-grid">
-            <label className="muted" htmlFor="roomId">Room</label>
-            <select id="roomId" className="select" name="roomId" defaultValue={initialBookingValues.roomId} required>
-              <option value="">Select room</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-
-            <select className="select" name="type" defaultValue="hourly">
-              <option value="hourly">Hourly</option>
-              <option value="daily">Daily</option>
-            </select>
+            <div>
+               <label className="muted" htmlFor="roomId">Room</label>
+               <select id="roomId" className="select" name="roomId" defaultValue={initialBookingValues.roomId} required>
+                  <option value="">Select room</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                    </option>
+                  ))}
+                </select>
+                <p></p>
+                <select className="select" name="type" defaultValue="hourly">
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                </select>
+            </div>
           </div>
 
           <div className="form-grid">
@@ -137,10 +139,7 @@ export function BookingForms({
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="muted">End time</label>
+               <label className="muted">End time</label>
               <select className="select" name="endTime" defaultValue={initialBookingValues.endTime} required>
                 <option value="">Select end time</option>
                 {timeOptions.map((time) => (
