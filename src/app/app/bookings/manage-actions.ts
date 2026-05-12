@@ -90,9 +90,6 @@ function canCancelWithoutNotice(isPermanent: boolean, role: string) {
 export async function cancelBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()
 
-
-
-
   if (!result) {
     redirect('/signin')
   }
@@ -188,11 +185,13 @@ export async function updateBooking(formData: FormData) {
     redirect('/onboarding')
   }
 
+
   const bookingId = formData.get('bookingId')
   const roomId = formData.get('roomId')
   const dateValue = formData.get('date')
   const startTimeValue = formData.get('startTime')
   const endTimeValue = formData.get('endTime')
+  const clientNameValue = formData.get('clientName')
 
   if (typeof bookingId !== 'string' || !bookingId) {
     throw new Error('Booking id is required.')
@@ -205,6 +204,13 @@ export async function updateBooking(formData: FormData) {
   if (typeof dateValue !== 'string' || typeof startTimeValue !== 'string' || typeof endTimeValue !== 'string') {
     throw new Error('Date, start time, and end time are required.')
   }
+
+
+  if (typeof clientNameValue !== 'string' || clientNameValue.trim().length < 2) {
+  throw new Error('Client name must be at least 2 characters long.')
+}
+
+const clientName = clientNameValue.trim()
 
   const startAt = combineDateAndTime(dateValue, startTimeValue)
   const endAt = combineDateAndTime(dateValue, endTimeValue)
@@ -264,6 +270,7 @@ export async function updateBooking(formData: FormData) {
       roomId,
       startAt,
       endAt,
+      clientName,
     },
   })
 

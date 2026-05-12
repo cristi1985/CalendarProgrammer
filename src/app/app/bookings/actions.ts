@@ -11,6 +11,7 @@ const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
 const MAX_RECURRENCE_DAYS = 14
 
+
 type BookingType = 'hourly' | 'daily'
 type RecurrenceType = 'none' | 'daily' | 'weekly'
 
@@ -140,6 +141,7 @@ export async function createBookingAction (_previousState: ActionState, formData
 
 export async function createBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()
+  
 
   if (!result) {
     redirect('/signin')
@@ -155,6 +157,7 @@ export async function createBooking(formData: FormData) {
   const dateValue = formData.get('date')
   const startTimeValue = formData.get('startTime')
   const endTimeValue = formData.get('endTime')
+  const clientNameValue = formData.get('clientName') as string | null
 
   const recurrenceUntilValue = formData.get('recurrenceUntil')
   const recurrenceUntil =
@@ -181,6 +184,12 @@ export async function createBooking(formData: FormData) {
   if (startTimeValue >= endTimeValue) {
     throw new Error('Booking start time must be before end time.')
   }
+
+  if (typeof clientNameValue !== 'string' || clientNameValue.trim().length < 2) {
+  throw new Error('Client name must be at least 2 characters long.')
+}
+
+  const clientName = clientNameValue.trim()
 
   const startAt = combineDateAndTime(dateValue, startTimeValue)
   const endAt = combineDateAndTime(dateValue, endTimeValue)
@@ -231,6 +240,18 @@ export async function createBooking(formData: FormData) {
       type,
     })),
   })
+
+  await db.booking.createMany({
+  data: occurrences.map((occurrence) => ({
+    tenantId: result.tenantUser!.tenantId,
+    roomId,
+    userId: result.user.id,
+    clientName,
+    startAt: occurrence.startAt,
+    endAt: occurrence.endAt,
+    type,
+  })),
+})
 
   revalidatePath('/app/bookings')
 }

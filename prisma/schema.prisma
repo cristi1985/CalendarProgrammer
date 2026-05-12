@@ -8,27 +8,25 @@ datasource db {
 }
 
 model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  createdAt DateTime @default(now())
-
-  users    TenantUser[]
-  rooms    Room[]
-  bookings Booking[]
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  bookings    Booking[]
   invitations Invitation[]
+  rooms       Room[]
+  users       TenantUser[]
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  fullName  String
+  id           String       @id @default(uuid())
+  email        String       @unique
+  fullName     String
+  createdAt    DateTime     @default(now())
   authProvider String?
-  providers String[]
-  createdAt DateTime @default(now())
-
-  tenants TenantUser[]
-  Booking Booking[]
+  providers    String[]
+  Booking      Booking[]
+  tenants      TenantUser[]
 }
 
 model TenantUser {
@@ -37,20 +35,18 @@ model TenantUser {
   userId      String
   role        String
   isPermanent Boolean @default(false)
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
+  user        User    @relation(fields: [userId], references: [id])
 
   @@unique([tenantId, userId])
 }
 
 model Room {
-  id       String @id @default(uuid())
+  id       String    @id @default(uuid())
   tenantId String
   name     String
-
-  tenant   Tenant    @relation(fields: [tenantId], references: [id])
   bookings Booking[]
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model Booking {
@@ -58,13 +54,13 @@ model Booking {
   tenantId String
   roomId   String
   userId   String
+  clientName String?
   startAt  DateTime
   endAt    DateTime
   type     String
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-  room   Room   @relation(fields: [roomId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  room     Room     @relation(fields: [roomId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 }
 
 model Invitation {
@@ -76,7 +72,6 @@ model Invitation {
   acceptedAt  DateTime?
   expiresAt   DateTime?
   createdAt   DateTime  @default(now())
-
   tenant      Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([email])

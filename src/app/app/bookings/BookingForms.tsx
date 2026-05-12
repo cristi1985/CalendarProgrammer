@@ -14,6 +14,7 @@ type Room = {
 type Booking = {
     id: string
     roomId: string
+    clientName: string | null
     startAt: Date
     endAt: Date
     type:string
@@ -91,6 +92,18 @@ export function BookingForms({
         <h2 className="section-title">Create booking</h2>
 
         <form action={createFormAction} className="stack">
+          <div>
+            <label className="muted" htmlFor="clientName">
+              Client name
+            </label>
+            <input
+              id="clientName"
+              className="input"
+              name="clientName"
+              placeholder="Client name"
+              required
+            />
+          </div>
           <div className="form-grid">
             <label className="muted" htmlFor="roomId">Room</label>
             <select id="roomId" className="select" name="roomId" defaultValue={initialBookingValues.roomId} required>
@@ -163,13 +176,26 @@ export function BookingForms({
       <section className="stack">
         <h2 className="section-title">Recent bookings</h2>
 
+        
+
         <div className="card-list">
           {bookings.map((b) => (
             <div key={b.id} className="card-item">
               <div style={{ marginBottom: 8 }}>
                 <strong>{b.room.name}</strong> — {b.user.fullName}
               </div>
-
+              <div>
+                <label className="muted" htmlFor={`clientName-${b.id}`}>
+                  Client name
+                </label>
+                <input
+                  id={`clientName-${b.id}`}
+                  className="input"
+                  name="clientName"
+                  defaultValue={b.clientName ?? ''}
+                  required
+                />
+              </div>
               <div className="muted" style={{ marginBottom: 8 }}>
                 {new Date(b.startAt).toLocaleString()} →{' '}
                 {new Date(b.endAt).toLocaleString()}
