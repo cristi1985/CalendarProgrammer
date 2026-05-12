@@ -204,8 +204,8 @@ export default async function CalendarPage({
                           {formatTime(new Date(booking.endAt))}
                         </div>
                         <div>{booking.type}</div>
-                        <div className="inline-actions" style={{ marginTop: 6 }}>
-                          <Link href={buildEditBookingHref(booking.id)}>Edit / cancel</Link>
+                        <div className="inline-actions">
+                          <Link href={buildEditBookingHref(booking.id)}>Edit / Cancel</Link>
                         </div>
                       </div>
                     )
