@@ -231,17 +231,6 @@ export async function createBooking(formData: FormData) {
   }
 
   await db.booking.createMany({
-    data: occurrences.map((occurrence) => ({
-      tenantId: result.tenantUser!.tenantId,
-      roomId,
-      userId: result.user.id,
-      startAt: occurrence.startAt,
-      endAt: occurrence.endAt,
-      type,
-    })),
-  })
-
-  await db.booking.createMany({
   data: occurrences.map((occurrence) => ({
     tenantId: result.tenantUser!.tenantId,
     roomId,
