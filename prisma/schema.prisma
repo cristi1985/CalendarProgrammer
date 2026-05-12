@@ -26,6 +26,7 @@ model User {
   authProvider String?
   providers    String[]
   Booking      Booking[]
+  googleCalendarIntegration GoogleCalendarIntegration?
   tenants      TenantUser[]
 }
 
@@ -58,6 +59,7 @@ model Booking {
   startAt  DateTime
   endAt    DateTime
   type     String
+  googleEventId String?
   room     Room     @relation(fields: [roomId], references: [id])
   tenant   Tenant   @relation(fields: [tenantId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
@@ -75,4 +77,17 @@ model Invitation {
   tenant      Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([email])
+}
+
+model GoogleCalendarIntegration {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  accessToken  String?
+  refreshToken String?
+  calendarId   String   @default("primary")
+  enabled      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
