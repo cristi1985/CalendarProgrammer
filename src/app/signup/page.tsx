@@ -19,8 +19,10 @@ export default function SignUpPage() {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        scopes:'https://www.googleapis.com/auth/calendar.events',
         queryParams:{
-          prompt: 'select_account',
+          prompt: 'select_account consent',
+          access_type:'offline',
         }
       },
     })
