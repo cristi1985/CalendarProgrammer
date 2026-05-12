@@ -259,7 +259,7 @@ button.secondary {
   border: 1px solid var(--border);
   background: var(--primary-soft);
   border-radius: 10px;
-  padding: 8px;
+  padding: 4px;
   font-size: 12px;
 }
 
