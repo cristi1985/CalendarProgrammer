@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { syncAuthenticatedUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { toggleGoogleCalendarSync } from './actions'
 
 type SearchParams = {
   month?: string
@@ -84,6 +85,13 @@ export default async function ProfilePage({
   const { start, end } = getMonthBounds(selectedMonthDate)
   const isOwner = result.tenantUser.role === 'owner'
   const providersInfo = getUserProviders(result.user.authProvider, result.user.providers)
+  const googleCalendarIntegration = await db.googleCalendarIntegration.findUnique({
+    where: {
+      userId: result.user.id,
+    },
+  })
+
+  const isGoogleCalendarSyncEnabled = googleCalendarIntegration?.enabled ?? false
 
   if (!isOwner) {
     const bookings = await db.booking.findMany({
@@ -110,6 +118,7 @@ export default async function ProfilePage({
           <h1 className="page-title">Profile</h1>
           <p className="muted">View your booked hours by month.</p>
         </div>
+        <GoogleCalendarSyncToggle isConnected={!!googleCalendarIntegration} isEnabled={isGoogleCalendarSyncEnabled} />
 
         <section className="card-item">
           <h2 className="section-title">User details</h2>
@@ -317,3 +326,38 @@ export default async function ProfilePage({
     </div>
   )
 }
+
+function GoogleCalendarSyncToggle({
+   isConnected,
+   isEnabled,
+}: {
+    isConnected: boolean
+    isEnabled: boolean
+}) {
+    return (
+      <div className="stack">
+        <div>
+          <strong>Google Calendar Sync:</strong>{' '}
+          {isConnected ? isEnabled ? 'Enabled' : 'Disabled' : 'Not connected'}
+        </div>
+       {!isConnected && (
+        <div className="muted">
+          Connect your Google Calendar to sync your bookings with your calendar.      
+      </div>)}
+       {isConnected && (
+        <form action={toggleGoogleCalendarSync}>
+            <input
+              type="hidden"
+              name="enabled"
+              value={isEnabled ? 'false' : 'true' }
+            />
+          <button type ="submit" className={ isEnabled ? 'secondary': 'button'}>
+            {isEnabled ? 'Disable' : 'Enable'} Google Calendar Sync
+          </button>
+         
+        </form>
+       )}
+      </div>
+    )
+  }
+  

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, syncAuthenticatedUser } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 import { db } from '@/lib/db' 
 
 export async function GET(request: Request) {
@@ -8,7 +7,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
 
   if (!code) {
-    redirect('/signin')
+    return NextResponse.redirect(new URL('/signin', request.url))
   }
 
   const supabase = createServerSupabaseClient()
@@ -17,7 +16,7 @@ export async function GET(request: Request) {
   const {error} =  await supabase.auth.exchangeCodeForSession(code)
 
   if(error){
-    redirect('/signin')
+    return NextResponse.redirect(new URL('/signin', request.url))
   }
   
   const{

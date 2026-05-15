@@ -6,24 +6,13 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
-
+import { updateGoogleCalendarEventForBooking } from '@/lib/google-calendar'
+import { deleteGoogleCalendarEventForBooking } from '@/lib/google-calendar'
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
 const REGULAR_USER_CANCEL_NOTICE_HOURS = 24
 
-function parseDateTime(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string' || !value) {
-    throw new Error('Date and time are required.')
-  }
 
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    throw new Error('Invalid date provided.')
-  }
-
-  return date
-}
 
 function validateHalfHourStep(startAt: Date, endAt: Date) {
   const validMinutes = [0, 30]
@@ -130,14 +119,23 @@ export async function cancelBooking(formData: FormData) {
     throw new Error('Past bookings can only be cancelled on the same calendar day.')
   }
 
+  
+  try {
+    await deleteGoogleCalendarEventForBooking({
+    userId: booking.userId,
+    googleEventId: booking.googleEventId})}
+  catch (error) {
+    console.error('Error deleting Google Calendar event:', error);
+  }
   await db.booking.delete({
-    where: {
-      id: booking.id,
-    },
-  })
+      where: {
+        id: booking.id,
+      },
+    })
+    revalidatePath('/app/bookings')
+  }
 
-  revalidatePath('/app/bookings')
-}
+  
 
 function combineDateAndTime(date: string, time: string) {
   const value = new Date(`${date}T${time}`)
@@ -205,12 +203,11 @@ export async function updateBooking(formData: FormData) {
     throw new Error('Date, start time, and end time are required.')
   }
 
-
   if (typeof clientNameValue !== 'string' || clientNameValue.trim().length < 2) {
   throw new Error('Client name must be at least 2 characters long.')
-}
+  }
 
-const clientName = clientNameValue.trim()
+  const clientName = clientNameValue.trim()
 
   const startAt = combineDateAndTime(dateValue, startTimeValue)
   const endAt = combineDateAndTime(dateValue, endTimeValue)
@@ -262,7 +259,7 @@ const clientName = clientNameValue.trim()
     booking.id
   )
 
-  await db.booking.update({
+ const updateBooking = await db.booking.update({
     where: {
       id: booking.id,
     },
@@ -272,7 +269,16 @@ const clientName = clientNameValue.trim()
       endAt,
       clientName,
     },
+    include:{
+      room: true,
+      user: true,
+    }
   })
-
-  revalidatePath('/app/bookings')
+  try {
+    console.log('Updating Google Calendar event for booking:', updateBooking);
+    await updateGoogleCalendarEventForBooking(updateBooking);
+  } catch (error) {
+    console.error('Error updating Google Calendar event:', error);
+  }
+    revalidatePath('/app/bookings')
 }

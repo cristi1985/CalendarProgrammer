@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
+import { createGoogleCalendarEventForBooking } from '@/lib/google-calendar'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -230,17 +231,27 @@ export async function createBooking(formData: FormData) {
     )
   }
 
-  await db.booking.createMany({
-  data: occurrences.map((occurrence) => ({
-    tenantId: result.tenantUser!.tenantId,
-    roomId,
-    userId: result.user.id,
-    clientName,
-    startAt: occurrence.startAt,
-    endAt: occurrence.endAt,
-    type,
-  })),
-})
-
+  for(const occurrence of occurrences) {
+    const booking = await db.booking.create({
+      data: {
+        tenantId: result.tenantUser.tenantId,
+        userId: result.user.id,
+        roomId,
+        clientName,
+        startAt: occurrence.startAt,
+        endAt: occurrence.endAt,
+        type
+      },
+      include:{
+        room: true,
+        user: true,
+      }
+    })
+    try{
+      await createGoogleCalendarEventForBooking(booking)
+    } catch (error) {
+      console.error('Error creating Google Calendar event:', error)
+    }
+  }
   revalidatePath('/app/bookings')
 }

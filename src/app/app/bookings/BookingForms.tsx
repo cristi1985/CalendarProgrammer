@@ -183,18 +183,6 @@ export function BookingForms({
               <div style={{ marginBottom: 8 }}>
                 <strong>{b.room.name}</strong> — {b.user.fullName}
               </div>
-              <div>
-                <label className="muted" htmlFor={`clientName-${b.id}`}>
-                  Client name
-                </label>
-                <input
-                  id={`clientName-${b.id}`}
-                  className="input"
-                  name="clientName"
-                  defaultValue={b.clientName ?? ''}
-                  required
-                />
-              </div>
               <div className="muted" style={{ marginBottom: 8 }}>
                 {new Date(b.startAt).toLocaleString()} →{' '}
                 {new Date(b.endAt).toLocaleString()}
@@ -207,6 +195,19 @@ export function BookingForms({
 
                 <form action={updateFormAction} className="stack" style={{ marginTop: 12 }}>
                   <input type="hidden" name="bookingId" value={b.id} />
+
+                  <div>
+                      <label className="muted" htmlFor={`clientName-${b.id}`}>
+                        Client name
+                      </label>
+                      <input
+                        id={`clientName-${b.id}`}
+                        className="input"
+                        name="clientName"
+                        defaultValue={b.clientName ?? ''}
+                        required
+                      />
+                    </div>
 
                   <div className="form-grid">
                     <select className="select" name="roomId" defaultValue={b.roomId}>
