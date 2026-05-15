@@ -272,6 +272,11 @@ export async function updateBooking(formData: FormData) {
     include:{
       room: true,
       user: true,
+      tenant :{
+        select:{
+          timezone: true,
+        }
+      }
     }
   })
   try {

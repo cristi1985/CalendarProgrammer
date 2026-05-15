@@ -245,6 +245,11 @@ export async function createBooking(formData: FormData) {
       include:{
         room: true,
         user: true,
+        tenant :{
+          select:{
+            timezone: true,
+          }
+        }
       }
     })
     try{

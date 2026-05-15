@@ -15,6 +15,16 @@ type BookingForGoogleSync = {
     user: {
         fullName: string
     }
+    tenant:{
+        timezone: string
+    }
+}
+
+function toGoogleLocalDateTime(date: Date){
+    const pad = (value: number) => value.toString().padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+        date.getDate()
+      )}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`
 }
 
 async function getGoogleCalendarClient(userId: string) {
@@ -63,16 +73,20 @@ export async function createGoogleCalendarEventForBooking(booking: BookingForGoo
         return
     }
 
+    const timezone = booking.tenant.timezone || 'Europe/Bucharest'
+
     const event = await client.calendar.events.insert({
         calendarId: 'primary',
         requestBody: {
             summary: booking.clientName ? `Booking for ${booking.clientName}` : `Booking : ${booking.room.name}`,
             description: `Room:${booking.room.name}`,
             start: {
-                dateTime: booking.startAt.toISOString(),
+                dateTime: toGoogleLocalDateTime(booking.startAt),
+                timeZone: timezone,
             },
             end: {
-                dateTime: booking.endAt.toISOString(),
+                dateTime: toGoogleLocalDateTime(booking.endAt),
+                timeZone: timezone,
             },
         },
     })
@@ -124,6 +138,9 @@ export async function updateGoogleCalendarEventForBooking(booking: BookingForGoo
     if(!client){
         return
     }
+
+    const timezone = booking.tenant.timezone || 'Europe/Bucharest'
+
     await client.calendar.events.update({
         calendarId: client.integration.calendarId,
         eventId: booking.googleEventId,
@@ -133,10 +150,12 @@ export async function updateGoogleCalendarEventForBooking(booking: BookingForGoo
             : `Booking : ${booking.room.name}`,
             description: `Room:${booking.room.name}`,
             start: {
-                dateTime: booking.startAt.toISOString(),
+                dateTime: toGoogleLocalDateTime(booking.startAt),
+                timeZone: timezone,
             },
             end: {
-                dateTime: booking.endAt.toISOString(),
+                dateTime: toGoogleLocalDateTime(booking.endAt),
+                timeZone: timezone,
             },
         },
     })
