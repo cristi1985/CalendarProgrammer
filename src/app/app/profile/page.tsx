@@ -90,6 +90,7 @@ export default async function ProfilePage({
       userId: result.user.id,
     },
   })
+  console.log('Google Calendar Integration:', googleCalendarIntegration)
 
   const isGoogleCalendarSyncEnabled = googleCalendarIntegration?.enabled ?? false
 
@@ -118,7 +119,6 @@ export default async function ProfilePage({
           <h1 className="page-title">Profile</h1>
           <p className="muted">View your booked hours by month.</p>
         </div>
-        <GoogleCalendarSyncToggle isConnected={!!googleCalendarIntegration} isEnabled={isGoogleCalendarSyncEnabled} />
 
         <section className="card-item">
           <h2 className="section-title">User details</h2>
@@ -246,7 +246,7 @@ export default async function ProfilePage({
           Billing overview for your workspace by month.
         </p>
       </div>
-
+      <GoogleCalendarSyncToggle isConnected={!!googleCalendarIntegration} isEnabled={isGoogleCalendarSyncEnabled} />
       <section className="card-item">
         <section className="card-item">
             <h2 className="section-title">Your account</h2>
@@ -330,10 +330,11 @@ export default async function ProfilePage({
 function GoogleCalendarSyncToggle({
    isConnected,
    isEnabled,
-}: {
+}:{
     isConnected: boolean
     isEnabled: boolean
 }) {
+  console.log('Google Calendar Sync status:', { isConnected, isEnabled })
     return (
       <div className="stack">
         <div>
