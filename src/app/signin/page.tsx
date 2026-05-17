@@ -104,6 +104,13 @@ export default function SignInPage() {
           </button>
         </div>
 
+        <p className="muted">
+          By continuing, you agree to the{' '}
+          <Link href="/terms">Terms of Service</Link>{' '}
+          and{' '}
+          <Link href="/privacy">Privacy Policy</Link>.
+        </p>
+
         <hr className="auth-divider" />
 
         <p className="muted">
