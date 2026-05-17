@@ -24,9 +24,6 @@ type Booking = {
     user:{
         fullName: string
     }
-    tenant:{
-        timezone: string | null
-    } 
 }
 
 type InitialBookingValues = {
@@ -48,23 +45,18 @@ function buildTimeOptions() {
   return options
 }
 
+function toDateInputValue(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, '0')
 
-function toDateInputValue(date: Date, timezone: string) {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date)
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}`
 }
 
-function toTimeInputValue(date: Date, timezone: string) {
-  return new Intl.DateTimeFormat('en-GB', {
-    timeZone: timezone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
+function toTimeInputValue(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 export function BookingForms({
@@ -192,8 +184,8 @@ export function BookingForms({
                 <strong>{b.room.name}</strong> — {b.user.fullName}
               </div>
               <div className="muted" style={{ marginBottom: 8 }}>
-                {new Date(b.startAt).toLocaleString([], { timeZone: b.tenant.timezone || 'Europe/Bucharest' })} /{' '}
-                {new Date(b.endAt).toLocaleString([], { timeZone: b.tenant.timezone || 'Europe/Bucharest' })} /{' '}
+                {new Date(b.startAt).toLocaleString()} →{' '}
+                {new Date(b.endAt).toLocaleString()}
               </div>
 
               <div style={{ marginBottom: 12 }}>Type: {b.type}</div>
@@ -234,7 +226,7 @@ export function BookingForms({
                         className="input"
                         type="date"
                         name="date"
-                        defaultValue={toDateInputValue(new Date(b.startAt), b.tenant.timezone || 'Europe/Bucharest')} 
+                        defaultValue={toDateInputValue(new Date(b.startAt))}
                         required
                       />
                     </div>
@@ -244,7 +236,7 @@ export function BookingForms({
                       <select
                         className="select"
                         name="startTime"
-                        defaultValue={toTimeInputValue(new Date(b.startAt), b.tenant.timezone || 'Europe/Bucharest')}
+                        defaultValue={toTimeInputValue(new Date(b.startAt))}
                         required
                       >
                         {timeOptions.map((time) => (
@@ -260,7 +252,7 @@ export function BookingForms({
                       <select
                         className="select"
                         name="endTime"
-                        defaultValue={toTimeInputValue(new Date(b.endAt), b.tenant.timezone || 'Europe/Bucharest')}
+                        defaultValue={toTimeInputValue(new Date(b.endAt))}
                         required
                       >
                         {timeOptions.map((time) => (
