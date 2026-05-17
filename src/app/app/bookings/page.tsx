@@ -71,6 +71,11 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
     include: {
       room: true,
       user: true,
+      tenant:{
+        select: {
+          timezone: true
+        }
+      }
     },
   })
 
