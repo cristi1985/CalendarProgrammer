@@ -29,24 +29,45 @@ function parseDate(date?: string) {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed
 }
 
-function formatTime(date: Date) {
-  return date.toLocaleTimeString([], {
+function formatTime(date: Date, timezone: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: timezone,
     hour: '2-digit',
     minute: '2-digit',
-  })
+    hour12: false,
+  }).format(date)
 }
 
-function getBookingTopAndHeight(startAt: Date, endAt: Date) {
-  const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
-  const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
+
+function getTimeParts(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+
+  return {
+    hour: Number(parts.find((part) => part.type === 'hour')?.value ?? '0'),
+    minute: Number(parts.find((part) => part.type === 'minute')?.value ?? '0'),
+  }
+}
+
+function getBookingTopAndHeight(startAt: Date, endAt: Date, timezone: string) {
+  const start = getTimeParts(startAt, timezone)
+  const end = getTimeParts(endAt, timezone)
+
+  const startMinutes = start.hour * 60 + start.minute
+  const endMinutes = end.hour * 60 + end.minute
   const calendarStartMinutes = 8 * 60
   const pixelsPerMinute = 40 / 30
 
-  const top = Math.max(0, startMinutes - calendarStartMinutes) * pixelsPerMinute
-  const height = Math.max(28, (endMinutes - startMinutes) * pixelsPerMinute)
-
-  return { top, height }
+  return {
+    top: Math.max(0, startMinutes - calendarStartMinutes) * pixelsPerMinute,
+    height: Math.max(28, (endMinutes - startMinutes) * pixelsPerMinute),
+  }
 }
+
 
 function buildCreateBookingHref(roomId: string, date: Date, hour: string) {
   const dateStr = formatDateForInput(date)
@@ -90,7 +111,7 @@ export default async function CalendarPage({
       endAt: { gt: range.start },
       ...(searchParams.roomId ? { roomId: searchParams.roomId } : {}),
     },
-    include: { room: true, user: true },
+    include: { room: true, user: true, tenant: { select: { timezone: true } } },
     orderBy: { startAt: 'asc' },
   })
 
@@ -178,7 +199,8 @@ export default async function CalendarPage({
                   {roomBookings.map((booking) => {
                     const { top, height } = getBookingTopAndHeight(
                       new Date(booking.startAt),
-                      new Date(booking.endAt)
+                      new Date(booking.endAt),
+                      booking.tenant.timezone || 'Europe/Bucharest'
                     )
 
                     return (
@@ -200,8 +222,8 @@ export default async function CalendarPage({
                         </div>
                         <div className="muted">Booked by {booking.user.fullName}</div>
                         <div>
-                          {formatTime(new Date(booking.startAt))} -{' '}
-                          {formatTime(new Date(booking.endAt))}
+                          {formatTime(new Date(booking.startAt), booking.tenant.timezone || 'Europe/Bucharest')} -{' '}
+                          {formatTime(new Date(booking.endAt), booking.tenant.timezone || 'Europe/Bucharest')}
                         </div>
                         <div>{booking.type}</div>
                         <div className="inline-actions">
@@ -245,8 +267,8 @@ export default async function CalendarPage({
                         </div>
                         <div>{booking.clientName || booking.user.fullName}</div>
                         <div>
-                          {formatTime(new Date(booking.startAt))} -{' '}
-                          {formatTime(new Date(booking.endAt))}
+                          {formatTime(new Date(booking.startAt), booking.tenant.timezone || 'Europe/Bucharest')} -{' '}
+                          {formatTime(new Date(booking.endAt), booking.tenant.timezone || 'Europe/Bucharest')}
                         </div>
                         <div className="inline-actions" style={{ marginTop: 6 }}>
                           <Link href={buildEditBookingHref(booking.id)}>Edit / cancel</Link>
@@ -287,7 +309,7 @@ export default async function CalendarPage({
                           <strong>{booking.room.name}</strong>
                         </div>
                         <div>{booking.clientName || booking.user.fullName}</div>
-                        <div>{formatTime(new Date(booking.startAt))}</div>
+                        <div>{formatTime(new Date(booking.startAt), booking.tenant.timezone || 'Europe/Bucharest' )}</div>
                         <div className="inline-actions" style={{ marginTop: 6 }}>
                           <Link href={buildEditBookingHref(booking.id)}>Edit</Link>
                         </div>
