@@ -1,6 +1,5 @@
 import {google} from 'googleapis';
 import {db} from "@/lib/db";
-import { calendar } from 'googleapis/build/src/apis/calendar';
 
 type BookingForGoogleSync = {
     id: string,
