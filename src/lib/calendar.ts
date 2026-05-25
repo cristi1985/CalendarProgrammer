@@ -143,9 +143,16 @@ export function getDayBounds(date: Date, timeZone?: string) {
 
 export function getWeekBounds(date: Date, timeZone?: string) {
   if (timeZone) {
-    const dateString = formatDateForInput(date, timeZone)
-    const start = zonedDateTimeToDate(dateString, '00:00', timeZone)
-    const end = zonedDateTimeToDate(dateString, '23:59:59', timeZone)
+     const dateString = formatDateForInput(date, timeZone)
+    const [year, month, day] = dateString.split('-').map(Number)
+    const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+    const distanceFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    const startDateString = addDaysToDateString(dateString, -distanceFromMonday)
+    const nextWeekDateString = addDaysToDateString(startDateString, 7)
+
+    const start = zonedDateTimeToDate(startDateString, '00:00', timeZone)
+    const nextWeekStart = zonedDateTimeToDate(nextWeekDateString, '00:00', timeZone)
+    const end = new Date(nextWeekStart.getTime() - 1)
     return { start, end }
   }
 
@@ -167,8 +174,16 @@ export function getWeekBounds(date: Date, timeZone?: string) {
 export function getMonthBounds(date: Date, timeZone?: string) {
   if (timeZone) {
     const dateString = formatDateForInput(date, timeZone)
-    const start = zonedDateTimeToDate(dateString, '00:00', timeZone)
-    const end = zonedDateTimeToDate(dateString, '23:59:59', timeZone)
+    const [year, month] = dateString.split('-').map(Number)
+
+    const startDateString = `${year}-${pad(month)}-01`
+    const nextMonthYear = month === 12 ? year + 1 : year
+    const nextMonth = month === 12 ? 1 : month + 1
+    const nextMonthDateString = `${nextMonthYear}-${pad(nextMonth)}-01`
+
+    const start = zonedDateTimeToDate(startDateString, '00:00', timeZone)
+    const nextMonthStart = zonedDateTimeToDate(nextMonthDateString, '00:00', timeZone)
+    const end = new Date(nextMonthStart.getTime() - 1)
     return { start, end }
   }
   const start = new Date(date.getFullYear(), date.getMonth(), 1)

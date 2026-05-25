@@ -6,7 +6,9 @@ import {
   buildMonthDates,
   buildWeekDates,
   formatDateForInput,
+  formatTimeForCalendar,
   getCalendarRange,
+  getMinutesSinceMidnight,
   isSameCalendarDay,
   zonedDateTimeToDate,
 } from '@/lib/calendar'
@@ -25,26 +27,22 @@ function parseView(view?: string) {
 }
 
 function parseDate(date: string | undefined, timeZone: string) {
-  if (!date) {
-    return new Date()
-  }
+ const dateString = date || formatDateForInput(new Date(), timeZone)
+
   try {
-    return zonedDateTimeToDate(date, '12:00', timeZone)
+    return zonedDateTimeToDate(dateString, '12:00', timeZone)
   } catch {
-    return new Date()
+    return zonedDateTimeToDate(formatDateForInput(new Date(), timeZone), '12:00', timeZone)
   }
 }
 
-function formatTime(date: Date) {
-  return date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+function formatTime(date: Date, timeZone: string) {
+  return formatTimeForCalendar(date, timeZone)
 }
 
-function getBookingTopAndHeight(startAt: Date, endAt: Date) {
-  const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
-  const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
+function getBookingTopAndHeight(startAt: Date, endAt: Date, timeZone: string) {
+  const startMinutes = getMinutesSinceMidnight(startAt, timeZone)
+  const endMinutes = getMinutesSinceMidnight(endAt, timeZone)
   const calendarStartMinutes = 8 * 60
   const pixelsPerMinute = 40 / 30
 
@@ -54,8 +52,9 @@ function getBookingTopAndHeight(startAt: Date, endAt: Date) {
   return { top, height }
 }
 
-function buildCreateBookingHref(roomId: string, date: Date, hour: string) {
-  const dateStr = formatDateForInput(date)
+function buildCreateBookingHref(roomId: string, date: Date, hour: string, timeZone: string
+) {
+  const dateStr = formatDateForInput(date, timeZone)
   return `/app/bookings?roomId=${roomId}&startAt=${dateStr}T${hour}`
 }
 
@@ -101,12 +100,25 @@ export default async function CalendarPage({
     orderBy: { startAt: 'asc' },
   })
 
+  console.log({
+  timeZone,
+  baseDate,
+  range,
+  bookings: bookings.map((booking) => ({
+    id: booking.id,
+    roomId: booking.roomId,
+    startAt: booking.startAt,
+    endAt: booking.endAt,
+    sameDay: isSameCalendarDay(new Date(booking.startAt), baseDate, timeZone),
+  })),
+})
+
   return (
     <div className="stack">
       <div>
         <h1 className="page-title">Calendar</h1>
 
-        <CalendarFilters view={view} date={formatDateForInput(baseDate)} roomId={searchParams.roomId ??''} rooms={allRooms} />
+        <CalendarFilters view={view} date={formatDateForInput(baseDate,timeZone)} roomId={searchParams.roomId ??''} rooms={allRooms} />
       </div>
 
       {view === 'day' && (
@@ -150,6 +162,18 @@ export default async function CalendarPage({
                   booking.roomId === room.id &&
                   isSameCalendarDay(new Date(booking.startAt), baseDate, timeZone)
               )
+              console.log({
+                room: {
+                  id: room.id,
+                  name: room.name,
+                },
+                roomBookings: roomBookings.map((booking) => ({
+                  id: booking.id,
+                  roomId: booking.roomId,
+                  startAt: booking.startAt,
+                  endAt: booking.endAt,
+                })),
+              })
 
               return (
                 <div
@@ -174,7 +198,7 @@ export default async function CalendarPage({
                     >
                       <Link
                         className="muted"
-                        href={buildCreateBookingHref(room.id, baseDate, slot)}
+                        href={buildCreateBookingHref(room.id, baseDate, slot, timeZone)}
                         style={{ fontSize: 12 }}
                       >
                         + Add at {slot}
@@ -185,7 +209,8 @@ export default async function CalendarPage({
                   {roomBookings.map((booking) => {
                     const { top, height } = getBookingTopAndHeight(
                       new Date(booking.startAt),
-                      new Date(booking.endAt)
+                      new Date(booking.endAt),
+                      timeZone
                     )
 
                     return (
@@ -207,8 +232,8 @@ export default async function CalendarPage({
                         </div>
                         <div className="muted">Booked by {booking.user.fullName}</div>
                         <div>
-                          {formatTime(new Date(booking.startAt))} -{' '}
-                          {formatTime(new Date(booking.endAt))}
+                          {formatTimeForCalendar(new Date(booking.startAt), timeZone)} -{' '}
+                          {formatTimeForCalendar(new Date(booking.endAt), timeZone)}
                         </div>
                         <div>{booking.type}</div>
                         <div className="inline-actions">
@@ -252,8 +277,8 @@ export default async function CalendarPage({
                         </div>
                         <div>{booking.clientName || booking.user.fullName}</div>
                         <div>
-                          {formatTime(new Date(booking.startAt))} -{' '}
-                          {formatTime(new Date(booking.endAt))}
+                          {formatTime(new Date(booking.startAt), timeZone)} -{' '}
+                          {formatTime(new Date(booking.endAt), timeZone)}
                         </div>
                         <div className="inline-actions" style={{ marginTop: 6 }}>
                           <Link href={buildEditBookingHref(booking.id)}>Edit / cancel</Link>
@@ -294,7 +319,7 @@ export default async function CalendarPage({
                           <strong>{booking.room.name}</strong>
                         </div>
                         <div>{booking.clientName || booking.user.fullName}</div>
-                        <div>{formatTime(new Date(booking.startAt))}</div>
+                        <div>{formatTime(new Date(booking.startAt), timeZone)}</div>
                         <div className="inline-actions" style={{ marginTop: 6 }}>
                           <Link href={buildEditBookingHref(booking.id)}>Edit</Link>
                         </div>
