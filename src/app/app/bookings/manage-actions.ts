@@ -8,23 +8,49 @@ import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 import { updateGoogleCalendarEventForBooking } from '@/lib/google-calendar'
 import { deleteGoogleCalendarEventForBooking } from '@/lib/google-calendar'
+import { zonedDateTimeToDate } from '@/lib/calendar'
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
 const REGULAR_USER_CANCEL_NOTICE_HOURS = 24
 
 
 
-function validateHalfHourStep(startAt: Date, endAt: Date) {
-  const validMinutes = [0, 30]
+function validateHalfHourStep(startAt: Date, endAt: Date, timeZone: string) {
+  const start = getDateTimePartsInTimeZone(startAt, timeZone)
+  const end = getDateTimePartsInTimeZone(endAt, timeZone)
 
-  if (!validMinutes.includes(startAt.getMinutes()) || !validMinutes.includes(endAt.getMinutes())) {
+  if (![0, 30].includes(start.minute) || ![0, 30].includes(end.minute)) {
     throw new Error('Bookings must start and end on the hour or half hour.')
   }
 }
 
-function validateWithinWorkingHours(startAt: Date, endAt: Date) {
-  const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
-  const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
+function getDateTimePartsInTimeZone(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, Number(part.value)])
+  ) as Record<string, number>
+}
+
+function getMinutesSinceMidnight(date: Date, timeZone: string) {
+  const parts = getDateTimePartsInTimeZone(date, timeZone)
+  return parts.hour * 60 + parts.minute
+}
+
+function validateWithinWorkingHours(startAt: Date, endAt: Date, timeZone: string) {
+  const startMinutes = getMinutesSinceMidnight(startAt, timeZone)
+  const endMinutes = getMinutesSinceMidnight(endAt, timeZone)
   const minMinutes = OPEN_HOUR * 60
   const maxMinutes = CLOSE_HOUR * 60
 
@@ -33,11 +59,14 @@ function validateWithinWorkingHours(startAt: Date, endAt: Date) {
   }
 }
 
-function isSameCalendarDay(a: Date, b: Date) {
+function isSameCalendarDay(a: Date, b: Date, timeZone: string) {
+  const first = getDateTimePartsInTimeZone(a, timeZone)
+  const second = getDateTimePartsInTimeZone(b, timeZone)
+
   return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
+    first.year === second.year &&
+    first.month === second.month &&
+    first.day === second.day
   )
 }
 
@@ -94,6 +123,7 @@ export async function cancelBooking(formData: FormData) {
   }
 
   const booking = await getManagedBooking(bookingId, result.tenantUser.tenantId)
+  const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
   const now = new Date()
   if (!booking) {
     throw new Error('Booking not found.')
@@ -115,7 +145,7 @@ export async function cancelBooking(formData: FormData) {
     }
   }
 
-  if(booking.startAt < now && !isSameCalendarDay(booking.startAt, now)) {
+  if(booking.startAt < now && !isSameCalendarDay(booking.startAt, now, timeZone)) {
     throw new Error('Past bookings can only be cancelled on the same calendar day.')
   }
 
@@ -137,7 +167,11 @@ export async function cancelBooking(formData: FormData) {
 
   
 
-function combineDateAndTime(date: string, time: string) {
+function combineDateAndTime(date: string, time: string, timeZone?: string): Date {
+  if(timeZone) {
+    const zonedDate = zonedDateTimeToDate(date, time, timeZone)
+    return zonedDate
+  }
   const value = new Date(`${date}T${time}`)
 
   if (Number.isNaN(value.getTime())) {
@@ -190,6 +224,7 @@ export async function updateBooking(formData: FormData) {
   const startTimeValue = formData.get('startTime')
   const endTimeValue = formData.get('endTime')
   const clientNameValue = formData.get('clientName')
+  const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
 
   if (typeof bookingId !== 'string' || !bookingId) {
     throw new Error('Booking id is required.')
@@ -209,15 +244,15 @@ export async function updateBooking(formData: FormData) {
 
   const clientName = clientNameValue.trim()
 
-  const startAt = combineDateAndTime(dateValue, startTimeValue)
-  const endAt = combineDateAndTime(dateValue, endTimeValue)
+  const startAt = combineDateAndTime(dateValue, startTimeValue, timeZone)
+  const endAt = combineDateAndTime(dateValue, endTimeValue, timeZone)
 
   if (startAt >= endAt) {
     throw new Error('Booking start time must be before end time.')
   }
  
-  validateHalfHourStep(startAt, endAt);
-  validateWithinWorkingHours(startAt, endAt)
+  validateHalfHourStep(startAt, endAt, timeZone);
+  validateWithinWorkingHours(startAt, endAt, timeZone)
 
   const booking = await getManagedBooking(bookingId, result.tenantUser.tenantId)
 
@@ -232,11 +267,11 @@ export async function updateBooking(formData: FormData) {
     throw new Error('You are not allowed to modify this booking.')
   }
 
-  if (!isSameCalendarDay(booking.startAt, startAt) || !isSameCalendarDay(booking.endAt, endAt)) {
+  if (!isSameCalendarDay(booking.startAt, startAt, timeZone) || !isSameCalendarDay(booking.endAt, endAt, timeZone)) {
     throw new Error('Bookings can only be modified within the same calendar day.')
   }
 
-  if (booking.type === 'daily' && !isSameCalendarDay(startAt, endAt)) {
+  if (booking.type === 'daily' && !isSameCalendarDay(startAt, endAt, timeZone)) {
     throw new Error('Daily bookings must remain inside one calendar day.')
   }
 

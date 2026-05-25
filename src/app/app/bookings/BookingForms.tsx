@@ -45,28 +45,57 @@ function buildTimeOptions() {
   return options
 }
 
-function toDateInputValue(date: Date) {
-  const pad = (value: number) => value.toString().padStart(2, '0')
+function getDateTimeParts(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}`
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value])
+  )
 }
 
-function toTimeInputValue(date: Date) {
-  const pad = (value: number) => value.toString().padStart(2, '0')
+function toDateInputValue(date: Date, timeZone: string) {
+  const parts = getDateTimeParts(date, timeZone)
 
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+
+function toTimeInputValue(date: Date, timeZone: string) {
+  const parts = getDateTimeParts(date, timeZone)
+
+  return `${parts.hour}:${parts.minute}`
+}
+
+function formatBookingDateTime(date: Date, timeZone: string) {
+  return date.toLocaleString([], {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export function BookingForms({
   rooms,
   bookings,
-  initialBookingValues
+  initialBookingValues,
+  timezone,
 }: {
   rooms: Room[]
   bookings: Booking[]
   initialBookingValues: InitialBookingValues
+  timezone: string
 }) {
   const timeOptions = buildTimeOptions()
   const [createState, createFormAction] = useFormState(
@@ -184,8 +213,8 @@ export function BookingForms({
                 <strong>{b.room.name}</strong> — {b.user.fullName}
               </div>
               <div className="muted" style={{ marginBottom: 8 }}>
-                {new Date(b.startAt).toLocaleString()} →{' '}
-                {new Date(b.endAt).toLocaleString()}
+                {formatBookingDateTime(new Date(b.startAt), timezone)} →{' '}
+                {formatBookingDateTime(new Date(b.endAt), timezone)}
               </div>
 
               <div style={{ marginBottom: 12 }}>Type: {b.type}</div>
@@ -226,7 +255,7 @@ export function BookingForms({
                         className="input"
                         type="date"
                         name="date"
-                        defaultValue={toDateInputValue(new Date(b.startAt))}
+                        defaultValue={toDateInputValue(new Date(b.startAt), timezone)}
                         required
                       />
                     </div>
@@ -236,7 +265,7 @@ export function BookingForms({
                       <select
                         className="select"
                         name="startTime"
-                        defaultValue={toTimeInputValue(new Date(b.startAt))}
+                        defaultValue={toTimeInputValue(new Date(b.startAt), timezone)}
                         required
                       >
                         {timeOptions.map((time) => (
@@ -252,7 +281,7 @@ export function BookingForms({
                       <select
                         className="select"
                         name="endTime"
-                        defaultValue={toTimeInputValue(new Date(b.endAt))}
+                        defaultValue={toTimeInputValue(new Date(b.endAt), timezone)}
                         required
                       >
                         {timeOptions.map((time) => (

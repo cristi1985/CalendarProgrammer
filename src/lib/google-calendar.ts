@@ -1,6 +1,5 @@
 import {google} from 'googleapis';
 import {db} from "@/lib/db";
-import { calendar } from 'googleapis/build/src/apis/calendar';
 
 type BookingForGoogleSync = {
     id: string,
@@ -20,11 +19,25 @@ type BookingForGoogleSync = {
     }
 }
 
-function toGoogleLocalDateTime(date: Date){
-    const pad = (value: number) => value.toString().padStart(2, '0')
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-        date.getDate()
-      )}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`
+function toGoogleLocalDateTime(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value])
+  )
+
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}:${values.second}`
 }
 
 async function getGoogleCalendarClient(userId: string) {
@@ -81,11 +94,11 @@ export async function createGoogleCalendarEventForBooking(booking: BookingForGoo
             summary: booking.clientName ? `Booking for ${booking.clientName}` : `Booking : ${booking.room.name}`,
             description: `Room:${booking.room.name}`,
             start: {
-                dateTime: toGoogleLocalDateTime(booking.startAt),
+                dateTime: toGoogleLocalDateTime(booking.startAt, timezone),
                 timeZone: timezone,
             },
             end: {
-                dateTime: toGoogleLocalDateTime(booking.endAt),
+                dateTime: toGoogleLocalDateTime(booking.endAt, timezone),
                 timeZone: timezone,
             },
         },
@@ -150,11 +163,11 @@ export async function updateGoogleCalendarEventForBooking(booking: BookingForGoo
             : `Booking : ${booking.room.name}`,
             description: `Room:${booking.room.name}`,
             start: {
-                dateTime: toGoogleLocalDateTime(booking.startAt),
+                dateTime: toGoogleLocalDateTime(booking.startAt, timezone),
                 timeZone: timezone,
             },
             end: {
-                dateTime: toGoogleLocalDateTime(booking.endAt),
+                dateTime: toGoogleLocalDateTime(booking.endAt, timezone),
                 timeZone: timezone,
             },
         },

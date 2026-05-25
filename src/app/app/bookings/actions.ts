@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 import { createGoogleCalendarEventForBooking } from '@/lib/google-calendar'
+import { get } from 'http'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -16,31 +17,24 @@ const MAX_RECURRENCE_DAYS = 14
 type BookingType = 'hourly' | 'daily'
 type RecurrenceType = 'none' | 'daily' | 'weekly'
 
-function validateHalfHourStep(startAt: Date, endAt: Date) {
-  const validMinutes = [0, 30]
+function validateHalfHourStep(startAt: Date, endAt: Date, timeZone: string) {
+  const start = getDateTimePartsInTimeZone(startAt, timeZone)
+  const end = getDateTimePartsInTimeZone(endAt, timeZone)
 
-  if (!validMinutes.includes(startAt.getMinutes()) || !validMinutes.includes(endAt.getMinutes())) {
+  if (![0, 30].includes(start.minute) || ![0, 30].includes(end.minute)) {
     throw new Error('Bookings must start and end on the hour or half hour.')
   }
 }
 
-function parseDateTime(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string' || !value) {
-    throw new Error('Date and time are required.')
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    throw new Error('Invalid date provided.')
-  }
-
-  return date
+function getMinutesSinceMidnight(date: Date, timeZone: string) {
+  const parts = getDateTimePartsInTimeZone(date, timeZone)
+  return parts.hour * 60 + parts.minute
 }
 
-function validateWithinWorkingHours(startAt: Date, endAt: Date) {
-  const startMinutes = startAt.getHours() * 60 + startAt.getMinutes()
-  const endMinutes = endAt.getHours() * 60 + endAt.getMinutes()
+
+function validateWithinWorkingHours(startAt: Date, endAt: Date, timeZone: string) {
+  const startMinutes = getMinutesSinceMidnight(startAt, timeZone)
+  const endMinutes = getMinutesSinceMidnight(endAt, timeZone)
   const minMinutes = OPEN_HOUR * 60
   const maxMinutes = CLOSE_HOUR * 60
 
@@ -49,11 +43,14 @@ function validateWithinWorkingHours(startAt: Date, endAt: Date) {
   }
 }
 
-function isSameCalendarDay(startAt: Date, endAt: Date) {
+function isSameCalendarDay(a: Date, b: Date, timeZone: string) {
+  const first = getDateTimePartsInTimeZone(a, timeZone)
+  const second = getDateTimePartsInTimeZone(b, timeZone)
+
   return (
-    startAt.getFullYear() === endAt.getFullYear() &&
-    startAt.getMonth() === endAt.getMonth() &&
-    startAt.getDate() === endAt.getDate()
+    first.year === second.year &&
+    first.month === second.month &&
+    first.day === second.day
   )
 }
 
@@ -117,11 +114,54 @@ async function ensureNoOverlap(tenantId: string, roomId: string, startAt: Date, 
   }
 }
 
-function combineDateAndTime(date: string, time: string) {
-  const value = new Date(`${date}T${time}`)
+function getDateTimePartsInTimeZone(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
 
-  if (Number.isNaN(value.getTime())) {
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, Number(part.value)])
+  ) as Record<string, number>
+}
+
+function getTimeZoneOffsetMs(date: Date, timeZone: string) {
+  const parts = getDateTimePartsInTimeZone(date, timeZone)
+
+  const asUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second
+  )
+
+  return asUtc - date.getTime()
+}
+
+function combineDateAndTime(date: string, time: string, timeZone: string) {
+  const normalizedTime = time.length === 5 ? `${time}:00` : time
+  const utcGuess = new Date(`${date}T${normalizedTime}.000Z`)
+
+  if (Number.isNaN(utcGuess.getTime())) {
     throw new Error('Invalid date or time provided.')
+  }
+
+  const offset = getTimeZoneOffsetMs(utcGuess, timeZone)
+  let value = new Date(utcGuess.getTime() - offset)
+
+  const correctedOffset = getTimeZoneOffsetMs(value, timeZone)
+  if (correctedOffset !== offset) {
+    value = new Date(utcGuess.getTime() - correctedOffset)
   }
 
   return value
@@ -143,6 +183,7 @@ export async function createBookingAction (_previousState: ActionState, formData
 export async function createBooking(formData: FormData) {
   const result = await syncAuthenticatedUser()
   
+  const timeZone = result?.tenantUser?.tenant.timezone || 'Europe/Bucharest'
 
   if (!result) {
     redirect('/signin')
@@ -192,14 +233,13 @@ export async function createBooking(formData: FormData) {
 
   const clientName = clientNameValue.trim()
 
-  const startAt = combineDateAndTime(dateValue, startTimeValue)
-  const endAt = combineDateAndTime(dateValue, endTimeValue)
+  const startAt = combineDateAndTime(dateValue, startTimeValue, timeZone)
+  const endAt = combineDateAndTime(dateValue, endTimeValue, timeZone)
 
+  validateHalfHourStep(startAt, endAt, timeZone);
+  validateWithinWorkingHours(startAt, endAt, timeZone)
 
-  validateHalfHourStep(startAt, endAt);
-  validateWithinWorkingHours(startAt, endAt)
-
-  if (type === 'daily' && !isSameCalendarDay(startAt, endAt)) {
+  if (type === 'daily' && !isSameCalendarDay(startAt, endAt, timeZone)) {
     throw new Error('Daily bookings must start and end on the same calendar day.')
   }
 
@@ -217,9 +257,9 @@ export async function createBooking(formData: FormData) {
   const occurrences = generateOccurrences(startAt, endAt, recurrence, recurrenceUntil)
 
   for (const occurrence of occurrences) {
-    validateWithinWorkingHours(occurrence.startAt, occurrence.endAt)
+    validateWithinWorkingHours(occurrence.startAt, occurrence.endAt, timeZone)
 
-    if (type === 'daily' && !isSameCalendarDay(occurrence.startAt, occurrence.endAt)) {
+    if (type === 'daily' && !isSameCalendarDay(occurrence.startAt, occurrence.endAt, timeZone)) {
       throw new Error('Daily bookings must remain inside one calendar day.')
     }
 

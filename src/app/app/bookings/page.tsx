@@ -73,6 +73,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
       user: true,
     },
   })
+   const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
 
   return (
     <div className="stack">
@@ -80,7 +81,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
         <h1 className="page-title">Bookings</h1>
       </div>
 
-      <BookingForms rooms={rooms} bookings={bookings} initialBookingValues={initialBookingValues} />
+      <BookingForms rooms={rooms} bookings={bookings} initialBookingValues={initialBookingValues} timezone={timeZone} />
     </div>
   )
   
