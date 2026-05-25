@@ -8,6 +8,7 @@ import {
   formatDateForInput,
   getCalendarRange,
   isSameCalendarDay,
+  zonedDateTimeToDate,
 } from '@/lib/calendar'
 import { redirect } from 'next/navigation'
 import { CalendarFilters } from './CalendarFilters'
@@ -23,52 +24,15 @@ function parseView(view?: string) {
   return 'day'
 }
 
-function getTimeZoneOffsetMs(date: Date, timeZone: string) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(date)
-
-  const values = Object.fromEntries(
-    parts
-      .filter((part) => part.type !== 'literal')
-      .map((part) => [part.type, Number(part.value)])
-  ) as Record<string, number>
-
-  const asUtc = Date.UTC(
-    values.year,
-    values.month - 1,
-    values.day,
-    values.hour,
-    values.minute,
-    values.second
-  )
-
-  return asUtc - date.getTime()
-}
-
 function parseDate(date: string | undefined, timeZone: string) {
-  const utcGuess = new Date(`${date}T00:00:00.000Z`)
-
-  if (Number.isNaN(utcGuess.getTime())) {
+  if (!date) {
     return new Date()
   }
-
-  const offset = getTimeZoneOffsetMs(utcGuess, timeZone)
-  let value = new Date(utcGuess.getTime() - offset)
-
-  const correctedOffset = getTimeZoneOffsetMs(value, timeZone)
-  if (correctedOffset !== offset) {
-    value = new Date(utcGuess.getTime() - correctedOffset)
+  try {
+    return zonedDateTimeToDate(date, '12:00', timeZone)
+  } catch {
+    return new Date()
   }
-
-  return value
 }
 
 function formatTime(date: Date) {
@@ -108,12 +72,12 @@ export default async function CalendarPage({
 
   if (!result) redirect('/signin')
   if (!result.tenantUser) redirect('/onboarding')
-
-  const view = parseView(searchParams.view)
-  const baseDate = parseDate(searchParams.date, result.tenantUser.tenant.timezone || 'Europe/Bucharest')
-  const range = getCalendarRange(view, baseDate)
-  const hourSlots = buildHourSlots()
   const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
+  const view = parseView(searchParams.view)
+  const baseDate = parseDate(searchParams.date, timeZone)
+  const range = getCalendarRange(view, baseDate, timeZone)
+  const hourSlots = buildHourSlots()
+  
 
   const allRooms = await db.room.findMany({
     where: {
@@ -184,7 +148,7 @@ export default async function CalendarPage({
               const roomBookings = bookings.filter(
                 (booking) =>
                   booking.roomId === room.id &&
-                  isSameCalendarDay(new Date(booking.startAt), baseDate)
+                  isSameCalendarDay(new Date(booking.startAt), baseDate, timeZone)
               )
 
               return (
@@ -279,7 +243,7 @@ export default async function CalendarPage({
                 <div className="card-list">
                   {bookings
                     .filter((booking) =>
-                      isSameCalendarDay(new Date(booking.startAt), day)
+                      isSameCalendarDay(new Date(booking.startAt), day, timeZone)
                     )
                     .map((booking) => (
                       <div key={booking.id} className="booking-chip">
@@ -322,7 +286,7 @@ export default async function CalendarPage({
                 <div className="card-list">
                   {bookings
                     .filter((booking) =>
-                      isSameCalendarDay(new Date(booking.startAt), day)
+                      isSameCalendarDay(new Date(booking.startAt), day, timeZone)
                     )
                     .map((booking) => (
                       <div key={booking.id} className="booking-chip">

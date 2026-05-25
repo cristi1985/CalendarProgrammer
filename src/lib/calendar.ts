@@ -59,7 +59,12 @@ function getTimeZoneOffsetMs(date: Date, timeZone: string) {
   return asUtc - date.getTime()
 }
 
-function addDaysToDateString(date: string, days: number) {
+function addDaysToDateString(date: string, days: number, timeZone?: string) {
+  if (timeZone) {
+    const value = zonedDateTimeToDate(date, '00:00', timeZone)
+    value.setDate(value.getDate() + days)
+    return formatDateForInput(value, timeZone)
+  }
   const[year, month, day] = date.split('-').map(Number)
   const value = new Date(Date.UTC(year, month - 1, day))
   value.setUTCDate(value.getUTCDate() + days)
@@ -96,9 +101,9 @@ export function buildHourSlots() {
 }
 
 export function formatDateForInput(date: Date, timeZone?: string) {
-  if (timeZone) {
+    if (timeZone) {
     const parts = getDateTimePartsInTimeZone(date, timeZone)
-    return `${parts.year}-${parts.month}-${parts.day}`
+    return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`
   }
   const year = date.getFullYear()
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
@@ -137,6 +142,13 @@ export function getDayBounds(date: Date, timeZone?: string) {
 }
 
 export function getWeekBounds(date: Date, timeZone?: string) {
+  if (timeZone) {
+    const dateString = formatDateForInput(date, timeZone)
+    const start = zonedDateTimeToDate(dateString, '00:00', timeZone)
+    const end = zonedDateTimeToDate(dateString, '23:59:59', timeZone)
+    return { start, end }
+  }
+
   const current = new Date(date)
   const day = current.getDay()
   const distanceFromMonday = day === 0 ? 6 : day - 1
@@ -171,7 +183,7 @@ export function getMonthBounds(date: Date, timeZone?: string) {
 export function getCalendarRange(view: CalendarView, date: Date, timeZone?: string) {
   if (view === 'day') return getDayBounds(date, timeZone)
   if (view === 'week') return getWeekBounds(date, timeZone)
-  return getMonthBounds(date)
+  return getMonthBounds(date, timeZone)
 }
 
 export function buildWeekDates(date: Date) {
