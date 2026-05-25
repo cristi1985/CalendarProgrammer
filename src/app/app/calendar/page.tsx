@@ -23,10 +23,52 @@ function parseView(view?: string) {
   return 'day'
 }
 
-function parseDate(date?: string) {
-  if (!date) return new Date()
-  const parsed = new Date(`${date}T00:00:00`)
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
+function getTimeZoneOffsetMs(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, Number(part.value)])
+  ) as Record<string, number>
+
+  const asUtc = Date.UTC(
+    values.year,
+    values.month - 1,
+    values.day,
+    values.hour,
+    values.minute,
+    values.second
+  )
+
+  return asUtc - date.getTime()
+}
+
+function parseDate(date: string | undefined, timeZone: string) {
+  const utcGuess = new Date(`${date}T00:00:00.000Z`)
+
+  if (Number.isNaN(utcGuess.getTime())) {
+    return new Date()
+  }
+
+  const offset = getTimeZoneOffsetMs(utcGuess, timeZone)
+  let value = new Date(utcGuess.getTime() - offset)
+
+  const correctedOffset = getTimeZoneOffsetMs(value, timeZone)
+  if (correctedOffset !== offset) {
+    value = new Date(utcGuess.getTime() - correctedOffset)
+  }
+
+  return value
 }
 
 function formatTime(date: Date) {
@@ -68,9 +110,10 @@ export default async function CalendarPage({
   if (!result.tenantUser) redirect('/onboarding')
 
   const view = parseView(searchParams.view)
-  const baseDate = parseDate(searchParams.date)
+  const baseDate = parseDate(searchParams.date, result.tenantUser.tenant.timezone || 'Europe/Bucharest')
   const range = getCalendarRange(view, baseDate)
   const hourSlots = buildHourSlots()
+  const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
 
   const allRooms = await db.room.findMany({
     where: {
