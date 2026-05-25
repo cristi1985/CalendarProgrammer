@@ -100,19 +100,6 @@ export default async function CalendarPage({
     orderBy: { startAt: 'asc' },
   })
 
-  console.log({
-  timeZone,
-  baseDate,
-  range,
-  bookings: bookings.map((booking) => ({
-    id: booking.id,
-    roomId: booking.roomId,
-    startAt: booking.startAt,
-    endAt: booking.endAt,
-    sameDay: isSameCalendarDay(new Date(booking.startAt), baseDate, timeZone),
-  })),
-})
-
   return (
     <div className="stack">
       <div>

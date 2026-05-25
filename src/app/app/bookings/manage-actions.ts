@@ -8,6 +8,7 @@ import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 import { updateGoogleCalendarEventForBooking } from '@/lib/google-calendar'
 import { deleteGoogleCalendarEventForBooking } from '@/lib/google-calendar'
+import { zonedDateTimeToDate } from '@/lib/calendar'
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
 const REGULAR_USER_CANCEL_NOTICE_HOURS = 24
@@ -166,7 +167,11 @@ export async function cancelBooking(formData: FormData) {
 
   
 
-function combineDateAndTime(date: string, time: string) {
+function combineDateAndTime(date: string, time: string, timeZone?: string): Date {
+  if(timeZone) {
+    const zonedDate = zonedDateTimeToDate(date, time, timeZone)
+    return zonedDate
+  }
   const value = new Date(`${date}T${time}`)
 
   if (Number.isNaN(value.getTime())) {
@@ -239,8 +244,8 @@ export async function updateBooking(formData: FormData) {
 
   const clientName = clientNameValue.trim()
 
-  const startAt = combineDateAndTime(dateValue, startTimeValue)
-  const endAt = combineDateAndTime(dateValue, endTimeValue)
+  const startAt = combineDateAndTime(dateValue, startTimeValue, timeZone)
+  const endAt = combineDateAndTime(dateValue, endTimeValue, timeZone)
 
   if (startAt >= endAt) {
     throw new Error('Booking start time must be before end time.')
