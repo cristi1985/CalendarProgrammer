@@ -7,15 +7,20 @@ import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 import { createGoogleCalendarEventForBooking } from '@/lib/google-calendar'
-import { get } from 'http'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
 const MAX_RECURRENCE_DAYS = 14
+const NON_PERMANENT_MEMBER_BOOKING_WINDOW_DAYS = 14
 
 
 type BookingType = 'hourly' | 'daily'
 type RecurrenceType = 'none' | 'daily' | 'weekly'
+
+type TenantUserBookingPermissions = {
+  role:string,
+  isPermanent: boolean
+}
 
 function validateHalfHourStep(startAt: Date, endAt: Date, timeZone: string) {
   const start = getDateTimePartsInTimeZone(startAt, timeZone)
@@ -54,10 +59,36 @@ function isSameCalendarDay(a: Date, b: Date, timeZone: string) {
   )
 }
 
+function getCalendarDateKey(date: Date, timeZone: string) {
+  const parts = getDateTimePartsInTimeZone(date, timeZone)
+  return parts.year * 10000 + parts.month * 100 + parts.day
+}
+
 function addDays(date: Date, days: number) {
   const next = new Date(date)
   next.setDate(next.getDate() + days)
   return next
+}
+
+function isNonPermanentMember(tenantUser: TenantUserBookingPermissions) {
+    return tenantUser.role === 'member' && !tenantUser.isPermanent
+}
+
+function validateNonPermanentMemberBookingWindow(occurences: Array<{ startAt:Date}>, tenantUser: TenantUserBookingPermissions, timeZone: string) {
+  if (!isNonPermanentMember(tenantUser)) {
+    return
+  }
+
+  const maxAllowedDate = addDays(new Date(), NON_PERMANENT_MEMBER_BOOKING_WINDOW_DAYS)
+  const maxAllowedKey = getCalendarDateKey(maxAllowedDate, timeZone)
+
+  const hasBookingOutisdeWindow = occurences.some((occurence) => 
+    getCalendarDateKey(occurence.startAt, timeZone) > maxAllowedKey
+  )
+
+  if (hasBookingOutisdeWindow) {
+    throw new Error('Non-permanent members can only create bookings up to 14 days in advance.')
+  }
 }
 
 function generateOccurrences(
@@ -255,6 +286,7 @@ export async function createBooking(formData: FormData) {
   }
 
   const occurrences = generateOccurrences(startAt, endAt, recurrence, recurrenceUntil)
+  validateNonPermanentMemberBookingWindow(occurrences, result.tenantUser, timeZone)
 
   for (const occurrence of occurrences) {
     validateWithinWorkingHours(occurrence.startAt, occurrence.endAt, timeZone)
