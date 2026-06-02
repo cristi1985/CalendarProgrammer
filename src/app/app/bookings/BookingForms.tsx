@@ -45,6 +45,18 @@ function buildTimeOptions() {
   return options
 }
 
+function addOneHourToTime(time: string) {
+  const [hoursValue, minutesValue] = time.split(':')
+  const hour = Number(hoursValue)
+  const minute = Number(minutesValue)
+
+  if(Number.isNaN(hour) || Number.isNaN(minute)) {
+    return null
+  }
+
+  return `${(hour+1).toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+}
+
 function getDateTimeParts(date: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone,
@@ -160,7 +172,14 @@ export function BookingForms({
 
             <div>
               <label className="muted">Start time</label>
-              <select className="select" name="startTime" defaultValue={initialBookingValues.startTime} required>
+              <select className="select" name="startTime" defaultValue={initialBookingValues.startTime} required
+              onChange={(event) => {
+                const endTime = addOneHourToTime(event.currentTarget.value)
+                const endTimeSelect = event.currentTarget.form?.elements.namedItem('endTime') as HTMLSelectElement | null
+                if(endTime && timeOptions.includes(endTime) && endTimeSelect) {
+                  endTimeSelect.value = endTime
+                }
+              }}>
                 <option value="">Select start time</option>
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
@@ -267,7 +286,13 @@ export function BookingForms({
                         name="startTime"
                         defaultValue={toTimeInputValue(new Date(b.startAt), timezone)}
                         required
-                      >
+                        onChange={(event) => {
+                          const endTime = addOneHourToTime(event.currentTarget.value)
+                          const endTimeSelect = event.currentTarget.form?.elements.namedItem('endTime') as HTMLSelectElement | null
+                          if(endTime && timeOptions.includes(endTime) && endTimeSelect) {
+                            endTimeSelect.value = endTime
+                          }
+                        }}>
                         {timeOptions.map((time) => (
                           <option key={time} value={time}>
                             {time}
