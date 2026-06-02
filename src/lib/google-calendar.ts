@@ -91,7 +91,7 @@ export async function createGoogleCalendarEventForBooking(booking: BookingForGoo
     const event = await client.calendar.events.insert({
         calendarId: 'primary',
         requestBody: {
-            summary: booking.clientName ? `Booking for ${booking.clientName}` : `Booking : ${booking.room.name}`,
+            summary: booking.clientName ? `B- ${booking.clientName}` : `B- : ${booking.room.name}`,
             description: `Room:${booking.room.name}`,
             start: {
                 dateTime: toGoogleLocalDateTime(booking.startAt, timezone),
@@ -159,8 +159,8 @@ export async function updateGoogleCalendarEventForBooking(booking: BookingForGoo
         eventId: booking.googleEventId,
         requestBody: {
             summary: booking.clientName 
-            ? `Booking for ${booking.clientName}` 
-            : `Booking : ${booking.room.name}`,
+            ? `B- ${booking.clientName}` 
+            : `B- : ${booking.room.name}`,
             description: `Room:${booking.room.name}`,
             start: {
                 dateTime: toGoogleLocalDateTime(booking.startAt, timezone),
