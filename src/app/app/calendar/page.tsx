@@ -264,6 +264,9 @@ export default async function CalendarPage({
                         </div>
                         <div>{booking.clientName || booking.user.fullName}</div>
                         <div>
+                          <strong>Booked by {booking.user.fullName}</strong>
+                        </div>
+                        <div>
                           {formatTime(new Date(booking.startAt), timeZone)} -{' '}
                           {formatTime(new Date(booking.endAt), timeZone)}
                         </div>
@@ -306,6 +309,9 @@ export default async function CalendarPage({
                           <strong>{booking.room.name}</strong>
                         </div>
                         <div>{booking.clientName || booking.user.fullName}</div>
+                        <div>
+                          <strong>Booked by {booking.user.fullName}</strong>
+                        </div>
                         <div>{formatTime(new Date(booking.startAt), timeZone)}</div>
                         <div className="inline-actions" style={{ marginTop: 6 }}>
                           <Link href={buildEditBookingHref(booking.id)}>Edit</Link>
