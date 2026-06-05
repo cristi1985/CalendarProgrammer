@@ -5,6 +5,7 @@ import {
   buildHourSlots,
   buildMonthDates,
   buildWeekDates,
+  formatDateForDisplay,
   formatDateForInput,
   formatTimeForCalendar,
   getCalendarRange,
@@ -105,7 +106,7 @@ export default async function CalendarPage({
       <div>
         <h1 className="page-title">Calendar</h1>
 
-        <CalendarFilters view={view} date={formatDateForInput(baseDate,timeZone)} roomId={searchParams.roomId ??''} rooms={allRooms} />
+        <CalendarFilters view={view} date={formatDateForDisplay(baseDate, timeZone)} roomId={searchParams.roomId ??''} rooms={allRooms} />
       </div>
 
       {view === 'day' && (
@@ -249,7 +250,7 @@ export default async function CalendarPage({
             {buildWeekDates(baseDate).map((day) => (
               <div key={day.toISOString()} className="calendar-week-cell card-item">
                 <div style={{ marginBottom: 8 }}>
-                  <strong>{formatDateForInput(day)}</strong>
+                  <strong>{formatDateForDisplay(day, timeZone)}</strong>
                 </div>
 
                 <div className="card-list">

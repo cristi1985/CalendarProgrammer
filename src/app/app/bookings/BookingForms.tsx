@@ -5,6 +5,7 @@ import { initialActionState } from "@/lib/action-state"
 import { createBookingAction } from "./actions"
 import { cancelBookingAction, updateBookingAction } from "./manage-actions"
 import { AutoDismissMessage } from "@/components/AutoDismissMessage"
+import { formatDateForDisplay } from "@/lib/calendar"
 
 type Room = {
   id: string
@@ -88,14 +89,7 @@ function toTimeInputValue(date: Date, timeZone: string) {
 }
 
 function formatBookingDateTime(date: Date, timeZone: string) {
-  return date.toLocaleString([], {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatDateForDisplay(date, timeZone)
 }
 
 export function BookingForms({

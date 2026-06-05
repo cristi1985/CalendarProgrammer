@@ -112,6 +112,18 @@ export function formatDateForInput(date: Date, timeZone?: string) {
   return `${year}-${month}-${day}`
 }
 
+export function formatDateForDisplay(date: Date, timeZone?: string) {
+  if (timeZone) {
+    const parts = getDateTimePartsInTimeZone(date, timeZone)
+    return `${parts.day}-${pad(parts.month)}-${pad(parts.year)}`
+  }
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+
+  return `${day}-${month}-${year}`
+}
+
 export function isSameCalendarDay(a: Date, b: Date, timeZone?: string) {
   if (timeZone) {
     return formatDateForInput(a, timeZone) === formatDateForInput(b, timeZone)
