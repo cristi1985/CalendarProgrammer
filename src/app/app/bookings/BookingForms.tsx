@@ -5,7 +5,7 @@ import { initialActionState } from "@/lib/action-state"
 import { createBookingAction } from "./actions"
 import { cancelBookingAction, updateBookingAction } from "./manage-actions"
 import { AutoDismissMessage } from "@/components/AutoDismissMessage"
-import { formatDateForDisplay } from "@/lib/calendar"
+import { formatDateForDisplay, formatTimeForCalendar } from "@/lib/calendar"
 
 type Room = {
   id: string
@@ -89,9 +89,12 @@ function toTimeInputValue(date: Date, timeZone: string) {
 }
 
 function formatBookingDateTime(date: Date, timeZone: string) {
-  return formatDateForDisplay(date, timeZone)
+  return `${formatDateForDisplay(date, timeZone)} ${formatTimeForCalendar(date, timeZone)}`
 }
 
+function formatBookingTimeRange(startAt: Date, endAt: Date, timeZone: string) {
+  return `${formatDateForDisplay(startAt, timeZone)} ${formatTimeForCalendar(startAt, timeZone)} → ${formatTimeForCalendar(endAt, timeZone)}`
+}
 export function BookingForms({
   rooms,
   bookings,
@@ -223,11 +226,10 @@ export function BookingForms({
           {bookings.map((b) => (
             <div key={b.id} className="card-item">
               <div style={{ marginBottom: 8 }}>
-                <strong>{b.room.name}</strong> — {b.user.fullName}
+                <strong>{b.room.name}</strong> — {b.clientName}
               </div>
               <div className="muted" style={{ marginBottom: 8 }}>
-                {formatBookingDateTime(new Date(b.startAt), timezone)} →{' '}
-                {formatBookingDateTime(new Date(b.endAt), timezone)}
+                {formatBookingTimeRange(new Date(b.startAt), new Date(b.endAt), timezone)}
               </div>
 
               <div style={{ marginBottom: 12 }}>Type: {b.type}</div>

@@ -16,6 +16,19 @@ import {
 import { redirect } from 'next/navigation'
 import { CalendarFilters } from './CalendarFilters'
 
+const roomBookingColors = [
+  '#2563eb', // blue
+  '#16a34a', // green
+  '#dc2626', // red
+  '#9333ea', // purple
+  '#ea580c', // orange
+  '#0891b2', // cyan
+  '#ca8a04', // yellow / gold
+  '#be123c', // rose
+  '#4f46e5', // indigo
+  '#15803d', // dark green
+]
+
 type SearchParams = {
   view?: string
   date?: string
@@ -61,6 +74,18 @@ function buildCreateBookingHref(roomId: string, date: Date, hour: string, timeZo
 
 function buildEditBookingHref(bookingId: string) {
   return `/app/bookings?editBookingId=${bookingId}`
+}
+
+function formatDayName(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone }).format(date)
+}
+
+function getRoomBookingColor(roomId: string) {
+  let hash = 0
+  for (let i = 0; i < roomId.length; i += 1) {
+    hash = roomId.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return roomBookingColors[Math.abs(hash) % roomBookingColors.length]
 }
 
 export default async function CalendarPage({
@@ -249,7 +274,9 @@ export default async function CalendarPage({
           >
             {buildWeekDates(baseDate).map((day) => (
               <div key={day.toISOString()} className="calendar-week-cell card-item">
-                <div style={{ marginBottom: 8 }}>
+                <div style ={{marginBottom:4}}>
+                  <strong>{formatDayName(day, timeZone)}</strong>
+                  <p></p>
                   <strong>{formatDateForDisplay(day, timeZone)}</strong>
                 </div>
 
@@ -259,7 +286,7 @@ export default async function CalendarPage({
                       isSameCalendarDay(new Date(booking.startAt), day, timeZone)
                     )
                     .map((booking) => (
-                      <div key={booking.id} className="booking-chip">
+                      <div key={booking.id} className="booking-chip" style={{ backgroundColor: getRoomBookingColor(booking.roomId) }}>
                         <div>
                           <strong>{booking.room.name}</strong>
                         </div>
@@ -296,6 +323,8 @@ export default async function CalendarPage({
             {buildMonthDates(baseDate).map((day) => (
               <div key={day.toISOString()} className="calendar-month-cell card-item">
                 <div style={{ marginBottom: 8 }}>
+                  <strong>{formatDayName(day, timeZone)}</strong>
+                  <p></p>
                   <strong>{day.getDate()}</strong>
                 </div>
 
@@ -305,7 +334,7 @@ export default async function CalendarPage({
                       isSameCalendarDay(new Date(booking.startAt), day, timeZone)
                     )
                     .map((booking) => (
-                      <div key={booking.id} className="booking-chip">
+                      <div key={booking.id} className="booking-chip" style={{ backgroundColor: getRoomBookingColor(booking.roomId) }}>
                         <div>
                           <strong>{booking.room.name}</strong>
                         </div>
