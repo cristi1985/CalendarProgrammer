@@ -32,9 +32,8 @@ export function RoomForms({ rooms }: { rooms: Room[] }) {
 
   return (
     <div className="stack">
-      <AutoDismissMessage message={createState.message} ok={createState.ok} />
-
-      <AutoDismissMessage message={deleteState.message} ok={deleteState.ok} />
+      <AutoDismissMessage message={createState.message} ok={createState.ok} id={createState.id} />
+      <AutoDismissMessage message={deleteState.message} ok={deleteState.ok} id={deleteState.id} />
 
       <section className="stack">
         <h2 className="section-title">Create room</h2>

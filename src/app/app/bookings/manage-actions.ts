@@ -184,24 +184,24 @@ function combineDateAndTime(date: string, time: string, timeZone?: string): Date
 export async function updateBookingAction(_previousState: ActionState, formData: FormData): Promise<ActionState> {
   try{
     await updateBooking(formData)
-    return { ok: true, message: 'Booking updated successfully.' }
+    return { ok: true, message: 'Booking updated successfully.', id: Date.now() }
   } catch (error) {
     if (isRedirectError(error)) {
       throw error
     }
-    return { ok: false, message: getErrorMessage(error) }
+    return { ok: false, message: getErrorMessage(error), id: Date.now() }
   }
 }
 
 export async function cancelBookingAction(_previousState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await cancelBooking(formData)
-    return { ok: true, message: 'Booking cancelled successfully.' }
+    return { ok: true, message: 'Booking cancelled successfully.', id: Date.now() }
   } catch (error) {
     if (isRedirectError(error)) {
       throw error
     }
-    return { ok: false, message: getErrorMessage(error) }
+    return { ok: false, message: getErrorMessage(error), id: Date.now() }
   }
 }
 

@@ -1,11 +1,13 @@
 export type ActionState = {
     ok:boolean,
     message?: string | null
+    id?: number
 }
 
 export const initialActionState: ActionState = {
     ok: false,
     message: null,
+    id:0,
 }
 
 export function getErrorMessage(error: unknown) {

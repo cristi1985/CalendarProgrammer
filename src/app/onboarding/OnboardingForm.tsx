@@ -13,7 +13,7 @@ export function OnboardingForm() {
 
   return (
     <div className="stack">
-      <AutoDismissMessage message={state.message} ok={state.ok} />
+      <AutoDismissMessage message={state.message} ok={state.ok} id={state.id} />
 
       <form action={formAction} className="stack">
         <input
