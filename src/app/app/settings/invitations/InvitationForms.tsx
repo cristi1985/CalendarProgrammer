@@ -24,7 +24,7 @@ export function InvitationForms({
 
   return (
     <div className="stack">
-      <AutoDismissMessage message={state.message} ok={state.ok} />
+      <AutoDismissMessage message={state.message} ok={state.ok} id={state.id} />
 
       <section className="stack">
         <h2 className="section-title">Invite a user</h2>

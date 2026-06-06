@@ -5,22 +5,25 @@ import { useEffect, useState } from "react"
 type AutoDismissMessageProps = {
     message?: string | null
     ok: boolean
+    id?: number
     duration?: number
 }
 
 export function AutoDismissMessage({
      message,
      ok,
+     id,
      duration = 5000,
      }: AutoDismissMessageProps) {
-    const [visibleMessage, setVisibleMessage] = useState(message)
+    const [visibleMessage, setVisibleMessage] = useState<string | null>(null)
 
     useEffect(() => {
-        setVisibleMessage(message)
-
-        if(!message) { 
+        if(!message) {
+            setVisibleMessage(null)
             return
         }
+        setVisibleMessage(message)
+        
 
         const timeoutId = window.setTimeout(() => {
             setVisibleMessage(null)
@@ -29,7 +32,7 @@ export function AutoDismissMessage({
         return () => {
             window.clearTimeout(timeoutId)
             }
-        }, [message, duration])
+        }, [message, id, duration])
 
         if (!visibleMessage) {
             return null
@@ -37,8 +40,10 @@ export function AutoDismissMessage({
     
 
     return (
-        <div className={ok ? 'success-message' : 'error-message'}>
+        <div className="toast-container">
+            <div className={ok ? 'toast-message toast-success' : 'toast-message toast-error'}>
             {visibleMessage}
+            </div>
         </div>
     )
     

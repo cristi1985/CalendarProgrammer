@@ -326,6 +326,34 @@ button.secondary {
   border-radius: var(--radius-sm);
 }
 
+.toast-container {
+  position: fixed;
+  top: 50%;
+  right: 50%;
+  z-index: 9999;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.toast-message {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.toast-success {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.toast-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 @media (max-width: 640px) {
   .auth-card {
     padding: 18px;

@@ -202,12 +202,12 @@ function combineDateAndTime(date: string, time: string, timeZone: string) {
 export async function createBookingAction (_previousState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await createBooking(formData)
-    return { ok: true, message: 'Booking created successfully.' }
+    return { ok: true, message: 'Booking created successfully.', id: Date.now() }
   } catch (error) {
     if (isRedirectError(error)) {
       throw error
     }
-    return { ok: false, message: getErrorMessage(error) }
+    return { ok: false, message: getErrorMessage(error), id: Date.now() }
   }
 }
 

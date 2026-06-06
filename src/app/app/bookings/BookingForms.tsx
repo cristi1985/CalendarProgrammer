@@ -122,9 +122,9 @@ export function BookingForms({
 
   return (
     <div className="stack">
-      <AutoDismissMessage message={createState.message} ok={createState.ok} />
-      <AutoDismissMessage message={updateState.message} ok={updateState.ok} />
-      <AutoDismissMessage message={cancelState.message} ok={cancelState.ok} />
+      <AutoDismissMessage message={createState.message} ok={createState.ok} id={createState.id} />
+      <AutoDismissMessage message={updateState.message} ok={updateState.ok} id={updateState.id} />
+      <AutoDismissMessage message={cancelState.message} ok={cancelState.ok} id={cancelState.id} />
 
       <section className="stack">
         <h2 className="section-title">Create booking</h2>
