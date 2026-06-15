@@ -47,7 +47,7 @@ export default function SignInPage() {
       return
     }
 
-    router.push('/auth/callback')
+    router.push('/app')
     router.refresh()
   }
 

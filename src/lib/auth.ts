@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { User } from '@supabase/supabase-js';
 import { cookies } from 'next/headers'
 
 function extractProviders(authUser: { app_metadata?: { provider?: string; providers?: string[] } }) {
@@ -47,8 +48,8 @@ export async function requireSessionUser() {
   return user
 }
 
-export async function syncAuthenticatedUser() {
-  const authUser = await requireSessionUser()
+export async function syncAuthenticatedUser(authenticatedUser?: User | null) {
+  const authUser = authenticatedUser || await requireSessionUser()
 
   if (!authUser?.email) {
     return null
