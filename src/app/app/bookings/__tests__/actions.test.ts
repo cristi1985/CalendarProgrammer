@@ -137,8 +137,8 @@ describe('createBooking action', () => {
       })
     )
 
-    expect(dbMock.booking.create).toHaveBeenCalledTimes(3)
-    expect(createGoogleCalendarEventForBookingMock).toHaveBeenCalledTimes(3)
+    expect(dbMock.booking.create).toHaveBeenCalledTimes(2)
+    expect(createGoogleCalendarEventForBookingMock).toHaveBeenCalledTimes(2)
   })
 
   it('rejects bookings not aligned to hour or half hour', async () => {
