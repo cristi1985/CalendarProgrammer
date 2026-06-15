@@ -131,7 +131,7 @@ export default async function CalendarPage({
       <div>
         <h1 className="page-title">Calendar</h1>
 
-        <CalendarFilters view={view} date={formatDateForDisplay(baseDate, timeZone)} roomId={searchParams.roomId ??''} rooms={allRooms} />
+        <CalendarFilters view={view} date={formatDateForInput(baseDate, timeZone)} roomId={searchParams.roomId ??''} rooms={allRooms} />
       </div>
 
       {view === 'day' && (
