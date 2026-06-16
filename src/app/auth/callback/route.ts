@@ -13,17 +13,13 @@ export async function GET(request: Request) {
   const supabase = createServerSupabaseClient()
 
   
-  const {error} =  await supabase.auth.exchangeCodeForSession(code)
+  const {data:{session},error} =  await supabase.auth.exchangeCodeForSession(code)
 
-  if(error){
-    return NextResponse.redirect(new URL('/signin', request.url))
+  if(error || !session?.user){
+    return NextResponse.redirect(new URL(`/signin?error=${encodeURIComponent(error?.message ?? 'Authentication failed')}`, request.url))
   }
   
-  const{
-    data:{session},
-  } = await supabase.auth.getSession()
-
-  const result = await syncAuthenticatedUser()
+  const result = await syncAuthenticatedUser(session.user)
 
   if (!result) {
     return NextResponse.redirect(new URL('/signin', request.url))
