@@ -5,12 +5,14 @@ const {
   revalidatePathMock,
   syncAuthenticatedUserMock,
   createGoogleCalendarEventForBookingMock,
+  sendBookingCreatedEmailMock,
   dbMock,
 } = vi.hoisted(() => ({
   redirectMock: vi.fn(),
   revalidatePathMock: vi.fn(),
   syncAuthenticatedUserMock: vi.fn(),
   createGoogleCalendarEventForBookingMock: vi.fn(),
+  sendBookingCreatedEmailMock: vi.fn(),
   dbMock: {
     room: {
       findFirst: vi.fn(),
@@ -18,6 +20,9 @@ const {
     booking: {
       findFirst: vi.fn(),
       create: vi.fn(),
+    },
+    tenantUser: {
+      findMany: vi.fn(),
     },
   },
 }))
@@ -44,6 +49,11 @@ vi.mock('@/lib/google-calendar', () => ({
     createGoogleCalendarEventForBookingMock(...args),
 }))
 
+vi.mock('@/lib/email', () => ({
+  sendBookingCreatedEmail: (...args: unknown[]) =>
+    sendBookingCreatedEmailMock(...args),
+}))
+
 import { createBooking } from '../actions'
 
 function createValidFormData(overrides: Record<string, string> = {}) {
@@ -68,7 +78,7 @@ describe('createBooking action', () => {
     vi.clearAllMocks()
 
     syncAuthenticatedUserMock.mockResolvedValue({
-      user: { id: 'user-1' },
+      user: { id: 'user-1', fullName: 'Test User' },
       tenantUser: {
         tenantId: 'tenant-1',
         role: 'member',
@@ -84,6 +94,9 @@ describe('createBooking action', () => {
     })
 
     dbMock.booking.findFirst.mockResolvedValue(null)
+    dbMock.tenantUser.findMany.mockResolvedValue([
+      { user: { email: 'owner@example.com' } },
+    ])
     dbMock.booking.create.mockResolvedValue({
       id: 'booking-1',
       tenantId: 'tenant-1',
@@ -98,6 +111,7 @@ describe('createBooking action', () => {
       tenant: { timezone: 'Europe/Bucharest' },
     })
     createGoogleCalendarEventForBookingMock.mockResolvedValue(undefined)
+    sendBookingCreatedEmailMock.mockResolvedValue(undefined)
   })
 
   it('creates a valid single booking', async () => {
@@ -106,6 +120,58 @@ describe('createBooking action', () => {
     expect(dbMock.booking.create).toHaveBeenCalledTimes(1)
     expect(createGoogleCalendarEventForBookingMock).toHaveBeenCalledTimes(1)
     expect(revalidatePathMock).toHaveBeenCalledWith('/app/bookings')
+  })
+
+  it('notifies an owner in the same tenant after another user creates a booking', async () => {
+    await createBooking(createValidFormData())
+
+    expect(dbMock.tenantUser.findMany).toHaveBeenCalledWith({
+      where: {
+        tenantId: 'tenant-1',
+        role: 'owner',
+        userId: { not: 'user-1' },
+      },
+      select: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    })
+    expect(sendBookingCreatedEmailMock).toHaveBeenCalledWith({
+      to: 'owner@example.com',
+      bookedByName: 'Test User',
+      roomName: 'Room 1',
+      startAt: '2025-01-01T08:00:00.000Z',
+      endAt: '2025-01-01T09:00:00.000Z',
+      timeZone: 'Europe/Bucharest',
+    })
+  })
+
+  it('does not send an email when there is no other owner to notify', async () => {
+    dbMock.tenantUser.findMany.mockResolvedValue([])
+
+    await createBooking(createValidFormData())
+
+    expect(sendBookingCreatedEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps the booking successful when an owner notification fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const emailError = new Error('Resend unavailable')
+    sendBookingCreatedEmailMock.mockRejectedValue(emailError)
+
+    await expect(createBooking(createValidFormData())).resolves.toBeUndefined()
+
+    expect(dbMock.booking.create).toHaveBeenCalledTimes(1)
+    expect(revalidatePathMock).toHaveBeenCalledWith('/app/bookings')
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to send email to owner@example.com:',
+      emailError
+    )
+
+    consoleError.mockRestore()
   })
 
   it('rejects overlapping bookings', async () => {
