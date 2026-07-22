@@ -17,6 +17,9 @@ const {
       findFirst: vi.fn(),
       create: vi.fn(),
     },
+    tenantUser: {
+      findMany: vi.fn(),
+    },
   },
 }))
 
@@ -85,6 +88,7 @@ describe('createBooking additional coverage', () => {
       name: 'Room 1',
     })
     dbMock.booking.findFirst.mockResolvedValue(null)
+    dbMock.tenantUser.findMany.mockResolvedValue([])
     dbMock.booking.create.mockResolvedValue({
       id: 'booking-1',
       tenantId: 'tenant-1',
