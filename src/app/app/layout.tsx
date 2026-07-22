@@ -30,7 +30,7 @@ export default async function AppLayout({
           </p>
 
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <AppNav />
+            <AppNav  role={result.tenantUser.role}/>
 
             <div className="nav-spacer" />
 

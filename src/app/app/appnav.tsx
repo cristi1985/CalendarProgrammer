@@ -4,16 +4,22 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
-const links = [
+
+
+type AppNavProps = {
+  role?: string
+}
+
+export default function AppNav({ role }: AppNavProps) {
+  const pathname = usePathname()
+  const links = [
   { href: '/app/calendar', label: 'Calendar' },
   { href: '/app/bookings', label: 'Bookings' },
   { href: '/app/settings/rooms', label: 'Rooms' },
+  ...(role === 'owner' || role === 'admin') ? [{ href: '/app/settings/members', label: 'Members' }] : [],
   { href: '/app/settings/invitations', label: 'Invitations' },
   { href: '/app/profile', label: 'Profile' },
 ]
-
-export default function AppNav() {
-  const pathname = usePathname()
 
   return (
     <nav className="app-nav">
