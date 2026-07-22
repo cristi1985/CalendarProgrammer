@@ -226,7 +226,7 @@ export function BookingForms({
           {bookings.map((b) => (
             <div key={b.id} className="card-item">
               <div style={{ marginBottom: 8 }}>
-                <strong>{b.room.name}</strong> — {b.clientName}
+                <strong>{b.room.name}</strong> — {b.clientName} booked by {b.user.fullName}
               </div>
               <div className="muted" style={{ marginBottom: 8 }}>
                 {formatBookingTimeRange(new Date(b.startAt), new Date(b.endAt), timezone)}
