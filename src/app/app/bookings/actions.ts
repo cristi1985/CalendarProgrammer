@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache'
 import type { ActionState } from '@/lib/action-state'
 import { getErrorMessage, isRedirectError } from '@/lib/action-state'
 import { createGoogleCalendarEventForBooking } from '@/lib/google-calendar'
+import {sendBookingCreatedEmail} from '@/lib/email'
 
 const OPEN_HOUR = 8
 const CLOSE_HOUR = 21
@@ -260,7 +261,7 @@ export async function createBooking(formData: FormData) {
 
   if (typeof clientNameValue !== 'string' || clientNameValue.trim().length < 2) {
   throw new Error('Client name must be at least 2 characters long.')
-}
+ }
 
   const clientName = clientNameValue.trim()
 
@@ -284,6 +285,23 @@ export async function createBooking(formData: FormData) {
   if (!room) {
     throw new Error('Selected room does not exist in this workspace.')
   }
+
+  const ownersToNotify = await db.tenantUser.findMany({
+    where: {
+      tenantId: result.tenantUser.tenantId,
+      role: 'owner',
+      userId: { 
+        not: result.user.id 
+      },
+    },
+    select:{
+      user:{
+        select:{
+          email:true,
+        },
+      },
+    },
+  })
 
   const occurrences = generateOccurrences(startAt, endAt, recurrence, recurrenceUntil)
   validateNonPermanentMemberBookingWindow(occurrences, result.tenantUser, timeZone)
@@ -329,6 +347,24 @@ export async function createBooking(formData: FormData) {
     } catch (error) {
       console.error('Error creating Google Calendar event:', error)
     }
-  }
+
+    const emailResults = await Promise.allSettled(
+      ownersToNotify.map(({user}) => sendBookingCreatedEmail({
+        to: user.email,
+        bookedByName: result.user.fullName || 'Unknown User',
+        roomName: booking.room.name,
+        startAt: booking.startAt.toISOString(),
+        endAt: booking.endAt.toISOString(),
+        timeZone: booking.tenant.timezone || 'Europe/Bucharest'
+      })
+    )
+   )
+
+    emailResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(`Failed to send email to ${ownersToNotify[index].user.email}:`, result.reason)
+      }
+    })
   revalidatePath('/app/bookings')
+  }
 }
