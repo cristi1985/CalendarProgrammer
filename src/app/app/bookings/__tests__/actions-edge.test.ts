@@ -19,6 +19,9 @@ const {
       findFirst: vi.fn(),
       create: vi.fn(),
     },
+    tenantUser: {
+      findMany: vi.fn(),
+    },
   },
 }))
 
@@ -83,6 +86,7 @@ describe('createBooking edge cases', () => {
       name: 'Room 1',
     })
     dbMock.booking.findFirst.mockResolvedValue(null)
+    dbMock.tenantUser.findMany.mockResolvedValue([])
     dbMock.booking.create.mockResolvedValue({
       id: 'booking-1',
       tenant: { timezone: 'Europe/Bucharest' },
