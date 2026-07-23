@@ -145,7 +145,7 @@ export async function cancelBooking(formData: FormData) {
     }
   }
 
-  if(booking.startAt < now && !isSameCalendarDay(booking.startAt, now, timeZone)) {
+  if(booking.startAt < now && !isSameCalendarDay(booking.startAt, now, timeZone) && !isPrivileged) {
     throw new Error('Past bookings can only be cancelled on the same calendar day.')
   }
 
