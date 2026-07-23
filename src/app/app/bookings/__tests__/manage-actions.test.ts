@@ -168,6 +168,58 @@ describe('booking manage actions', () => {
     expect(revalidatePathMock).toHaveBeenCalledWith('/app/bookings')
   })
 
+  it('allows an owner to cancel another user booking from a previous day', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue(
+      authenticatedUser({ role: 'owner' })
+    )
+    dbMock.booking.findFirst.mockResolvedValue(
+      managedBooking({
+        userId: 'user-2',
+        startAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
+        endAt: new Date(Date.now() - 47 * 60 * 60 * 1000),
+        googleEventId: 'google-event-1',
+      })
+    )
+    dbMock.booking.delete.mockResolvedValue({ id: 'booking-1' })
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+
+    await cancelBooking(formData)
+
+    expect(deleteGoogleCalendarEventForBookingMock).toHaveBeenCalledWith({
+      userId: 'user-2',
+      googleEventId: 'google-event-1',
+    })
+    expect(dbMock.booking.delete).toHaveBeenCalledWith({
+      where: { id: 'booking-1' },
+    })
+    expect(revalidatePathMock).toHaveBeenCalledWith('/app/bookings')
+  })
+
+  it('does not allow a permanent member to cancel a booking from a previous day', async () => {
+    syncAuthenticatedUserMock.mockResolvedValue(
+      authenticatedUser({ isPermanent: true })
+    )
+    dbMock.booking.findFirst.mockResolvedValue(
+      managedBooking({
+        startAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
+        endAt: new Date(Date.now() - 47 * 60 * 60 * 1000),
+      })
+    )
+
+    const formData = new FormData()
+    formData.set('bookingId', 'booking-1')
+
+    await expect(cancelBooking(formData)).rejects.toThrow(
+      'Past bookings can only be cancelled on the same calendar day.'
+    )
+
+    expect(deleteGoogleCalendarEventForBookingMock).not.toHaveBeenCalled()
+    expect(dbMock.booking.delete).not.toHaveBeenCalled()
+    expect(revalidatePathMock).not.toHaveBeenCalled()
+  })
+
   it('rejects updating a booking with invalid half-hour step', async () => {
     await expect(
       updateBooking(updateFormData({ startTime: '10:15', endTime: '11:00' }))
