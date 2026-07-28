@@ -51,6 +51,7 @@ function renderBookingForms(overrides: Partial<ComponentProps<typeof BookingForm
     <BookingForms
       rooms={rooms}
       bookings={[]}
+      selectedBooking={null}
       initialBookingValues={initialBookingValues}
       timezone="Europe/Bucharest"
       {...overrides}
@@ -176,5 +177,47 @@ describe('BookingForms', () => {
     const { container } = renderBookingForms()
     fireEvent.change(getCreateSelect(container, 'startTime'), { target: { value: '' } })
     expect(getCreateSelect(container, 'endTime')).toHaveValue('11:30')
+  })
+
+  it('hides the selected booking section when no booking was selected from the calendar', () => {
+    renderBookingForms()
+
+    expect(
+      screen.queryByRole('heading', { name: 'Selected Booking' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows a selected booking that is outside the recent bookings list and expands its edit controls', () => {
+    const selectedBooking = {
+      ...booking,
+      id: 'selected-booking',
+      clientName: 'Selected Client',
+    }
+
+    renderBookingForms({
+      bookings: [booking],
+      selectedBooking,
+    })
+
+    const selectedHeading = screen.getByRole('heading', {
+      name: 'Selected Booking',
+    })
+    const selectedSection = selectedHeading.closest('section')
+
+    expect(selectedSection).not.toBeNull()
+    expect(within(selectedSection as HTMLElement).getByText(/Selected Client/)).toBeInTheDocument()
+    expect(selectedSection?.querySelector('details')).toHaveAttribute('open')
+    expect(
+      screen.getByRole('heading', { name: 'Recent bookings' }).closest('section')
+    ).not.toHaveTextContent('Selected Client')
+  })
+
+  it('does not duplicate a selected booking in the recent bookings section', () => {
+    const { container } = renderBookingForms({
+      bookings: [booking],
+      selectedBooking: booking,
+    })
+
+    expect(container.querySelectorAll('input[value="booking-1"]')).toHaveLength(2)
   })
 })
