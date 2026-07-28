@@ -73,7 +73,19 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
       user: true,
     },
   })
-   const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
+
+  const selectedBooking = searchParams.editBookingId ? await db.booking.findFirst({
+    where: {
+      id: searchParams.editBookingId,
+      tenantId: result.tenantUser.tenantId,
+    },
+    include: {
+      room: true,
+      user: true,
+    },
+  }) : null
+
+  const timeZone = result.tenantUser.tenant.timezone || 'Europe/Bucharest'
 
   return (
     <div className="stack">
@@ -81,7 +93,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
         <h1 className="page-title">Bookings</h1>
       </div>
 
-      <BookingForms rooms={rooms} bookings={bookings} initialBookingValues={initialBookingValues} timezone={timeZone} />
+      <BookingForms rooms={rooms} bookings={bookings} selectedBooking={selectedBooking} initialBookingValues={initialBookingValues} timezone={timeZone} />
     </div>
   )
   
