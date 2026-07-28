@@ -207,19 +207,15 @@ export function BookingForms({
               required
               onChange={(event) => {
                 const endTime = addOneHourToTime(
-                  event.currentTarget.value
-                )
-
+                  event.currentTarget.value)
                 const endTimeSelect =
                   event.currentTarget.form?.elements.namedItem(
                     'endTime'
                   ) as HTMLSelectElement | null
 
-                if (
-                  endTime &&
+                if (endTime &&
                   timeOptions.includes(endTime) &&
-                  endTimeSelect
-                ) {
+                  endTimeSelect) {
                   endTimeSelect.value = endTime
                 }
               }}
@@ -384,113 +380,7 @@ export function BookingForms({
         
 
         <div className="card-list">
-          {bookings.map((b) => (
-            <div key={b.id} className="card-item">
-              <div style={{ marginBottom: 8 }}>
-                <strong>{b.room.name}</strong> — {b.clientName} booked by {b.user.fullName}
-              </div>
-              <div className="muted" style={{ marginBottom: 8 }}>
-                {formatBookingTimeRange(new Date(b.startAt), new Date(b.endAt), timezone)}
-              </div>
-
-              <div style={{ marginBottom: 12 }}>Type: {b.type}</div>
-
-              <details>
-                <summary>Edit booking</summary>
-
-                <form action={updateFormAction} className="stack" style={{ marginTop: 12 }}>
-                  <input type="hidden" name="bookingId" value={b.id} />
-
-                  <div>
-                      <label className="muted" htmlFor={`clientName-${b.id}`}>
-                        Client name
-                      </label>
-                      <input
-                        id={`clientName-${b.id}`}
-                        className="input"
-                        name="clientName"
-                        defaultValue={b.clientName ?? ''}
-                        required
-                      />
-                    </div>
-
-                  <div className="form-grid">
-                    <select className="select" name="roomId" defaultValue={b.roomId}>
-                      {rooms.map((room) => (
-                        <option key={room.id} value={room.id}>
-                          {room.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-grid">
-                    <div>
-                      <label className="muted">Date</label>
-                      <input
-                        className="input"
-                        type="date"
-                        name="date"
-                        defaultValue={toDateInputValue(new Date(b.startAt), timezone)}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="muted">Start time</label>
-                      <select
-                        className="select"
-                        name="startTime"
-                        defaultValue={toTimeInputValue(new Date(b.startAt), timezone)}
-                        required
-                        onChange={(event) => {
-                          const endTime = addOneHourToTime(event.currentTarget.value)
-                          const endTimeSelect = event.currentTarget.form?.elements.namedItem('endTime') as HTMLSelectElement | null
-                          if(endTime && timeOptions.includes(endTime) && endTimeSelect) {
-                            endTimeSelect.value = endTime
-                          }
-                        }}>
-                        {timeOptions.map((time) => (
-                          <option key={time} value={time}>
-                            {time}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="muted">End time</label>
-                      <select
-                        className="select"
-                        name="endTime"
-                        defaultValue={toTimeInputValue(new Date(b.endAt), timezone)}
-                        required
-                      >
-                        {timeOptions.map((time) => (
-                          <option key={time} value={time}>
-                            {time}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="inline-actions">
-                    <button className="button" type="submit">
-                      Save changes
-                    </button>
-                  </div>
-                </form>
-              </details>
-
-              <form action={cancelFormAction} style={{ marginTop: 12 }}>
-                <input type="hidden" name="bookingId" value={b.id} />
-                <button className="secondary" type="submit">
-                  Cancel booking
-                </button>
-              </form>
-            </div>
-          ))}
+          {recentBookings.map(renderBookingCard)}
         </div>
       </section>
     </div>
