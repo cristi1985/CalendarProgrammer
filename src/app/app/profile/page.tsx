@@ -122,6 +122,10 @@ export default async function ProfilePage(
         </div>
 
         <section className="card-item">
+          <GoogleCalendarSyncToggle
+            isConnected={!!googleCalendarIntegration?.refreshToken}
+            isEnabled={isGoogleCalendarSyncEnabled}
+          />
           <h2 className="section-title">User details</h2>
           <div className="stack">
             <div>
@@ -247,7 +251,7 @@ export default async function ProfilePage(
           Billing overview for your workspace by month.
         </p>
       </div>
-      <GoogleCalendarSyncToggle isConnected={!!googleCalendarIntegration} isEnabled={isGoogleCalendarSyncEnabled} />
+      <GoogleCalendarSyncToggle isConnected={!!googleCalendarIntegration?.refreshToken} isEnabled={isGoogleCalendarSyncEnabled} />
       <section className="card-item">
         <section className="card-item">
             <h2 className="section-title">Your account</h2>
@@ -335,7 +339,6 @@ function GoogleCalendarSyncToggle({
     isConnected: boolean
     isEnabled: boolean
 }) {
-  console.log('Google Calendar Sync status:', { isConnected, isEnabled })
     return (
       <div className="stack">
         <div>
