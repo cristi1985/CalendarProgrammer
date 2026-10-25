@@ -38,7 +38,8 @@ function getInitialBookingValues(searchParams: SearchParams) {
     endTime: addOneHour(startTime)
   }
 }
-export default async function BookingsPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function BookingsPage(props: { searchParams: Promise<SearchParams> }) {
+  const searchParams = await props.searchParams;
   const result = await syncAuthenticatedUser()
 
   if (!result) {
@@ -49,7 +50,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
     redirect('/onboarding')
   }
 
-  
+
   const initialBookingValues = getInitialBookingValues(searchParams)
   const rooms = await db.room.findMany({
     where: {
@@ -96,5 +97,4 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
       <BookingForms rooms={rooms} bookings={bookings} selectedBooking={selectedBooking} initialBookingValues={initialBookingValues} timezone={timeZone} />
     </div>
   )
-  
 }

@@ -66,11 +66,12 @@ function getHours(startAt: Date, endAt: Date) {
   return (endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60)
 }
 
-export default async function ProfilePage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
+export default async function ProfilePage(
+  props: {
+    searchParams: Promise<SearchParams>
+  }
+) {
+  const searchParams = await props.searchParams;
   const result = await syncAuthenticatedUser()
 
   if (!result) {

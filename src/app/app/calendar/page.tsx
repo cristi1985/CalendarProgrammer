@@ -88,11 +88,12 @@ function getRoomBookingColor(roomId: string) {
   return roomBookingColors[Math.abs(hash) % roomBookingColors.length]
 }
 
-export default async function CalendarPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
+export default async function CalendarPage(
+  props: {
+    searchParams: Promise<SearchParams>
+  }
+) {
+  const searchParams = await props.searchParams;
   const result = await syncAuthenticatedUser()
 
   if (!result) redirect('/signin')
@@ -102,7 +103,7 @@ export default async function CalendarPage({
   const baseDate = parseDate(searchParams.date, timeZone)
   const range = getCalendarRange(view, baseDate, timeZone)
   const hourSlots = buildHourSlots()
-  
+
 
   const allRooms = await db.room.findMany({
     where: {
