@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 const themes = [
   { value: 'default', label: 'Default' },
@@ -14,23 +14,40 @@ function isTheme(value: string | null): value is Theme {
   return themes.some((theme) => theme.value === value)
 }
 
+const storageKey = 'calendar-programmer-theme'
+const themeChangeEvent = 'calendar-programmer-theme-change'
+
+function getThemeSnapshot(): Theme {
+  const storedTheme = window.localStorage.getItem(storageKey)
+  if (isTheme(storedTheme)) {
+    return storedTheme
+  }
+  return 'default'
+}
+
+function getServerSnapshot(): Theme {
+  return 'default'
+}
+
+function subscribeToTheme(callback: () => void){
+  window.addEventListener('storage', callback)
+  window.addEventListener(themeChangeEvent, callback)
+
+  return () => {
+    window.removeEventListener('storage', callback)
+    window.removeEventListener(themeChangeEvent, callback)
+  }
+}
+
 export default function ThemeSelector() {
-  const [theme, setTheme] = useState<Theme>('default')
+  const [theme, setTheme] = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerSnapshot)
 
   useEffect(() => {
-    const storedTheme = window.localStorage.getItem('calendar-programmer-theme')
+     document.documentElement.dataset.theme = theme
+    }, [theme]) 
 
-    if (isTheme(storedTheme)) {
-      setTheme(storedTheme)
-      document.documentElement.dataset.theme = storedTheme
-      return
-    }
-
-    document.documentElement.dataset.theme = 'default'
-  }, [])
 
   const handleThemeChange = (nextTheme: Theme) => {
-    setTheme(nextTheme)
     document.documentElement.dataset.theme = nextTheme
     window.localStorage.setItem('calendar-programmer-theme', nextTheme)
   }
