@@ -97,7 +97,7 @@ describe('BookingsPage selected booking', () => {
   it('loads the calendar-selected booking separately from the 20 recent bookings', async () => {
     render(
       await BookingsPage({
-        searchParams: { editBookingId: 'selected-booking' },
+        searchParams: Promise.resolve({ editBookingId: 'selected-booking' }),
       })
     )
 
@@ -122,7 +122,7 @@ describe('BookingsPage selected booking', () => {
   })
 
   it('does not query or show a selected booking without editBookingId', async () => {
-    render(await BookingsPage({ searchParams: {} }))
+    render(await BookingsPage({ searchParams: Promise.resolve({}) }))
 
     expect(bookingFindFirstMock).not.toHaveBeenCalled()
     expect(renderedBookingFormsProps().selectedBooking).toBeNull()
@@ -133,7 +133,7 @@ describe('BookingsPage selected booking', () => {
 
     render(
       await BookingsPage({
-        searchParams: { editBookingId: 'other-tenant-booking' },
+        searchParams: Promise.resolve({ editBookingId: 'other-tenant-booking' }),
       })
     )
 

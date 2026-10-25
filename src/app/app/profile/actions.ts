@@ -37,5 +37,5 @@ export async function toggleGoogleCalendarSync(formData: FormData) {
         },
     })
 
-    revalidatePath('/profile')  
+    revalidatePath('/app/profile')  
 }

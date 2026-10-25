@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { User } from '@supabase/supabase-js';
-import { cookies } from 'next/headers'
+import { cookies } from 'next/headers';
 
 function extractProviders(authUser: { app_metadata?: { provider?: string; providers?: string[] } }) {
   const providers = authUser.app_metadata?.providers ?? []
@@ -9,8 +9,8 @@ function extractProviders(authUser: { app_metadata?: { provider?: string; provid
   return({ authProvider: provider, providers, })
 }
 
-export function createServerSupabaseClient() {
-  const cookieStore = cookies()
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,7 +40,7 @@ export function createServerSupabaseClient() {
 }
 
 export async function requireSessionUser() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -49,7 +49,7 @@ export async function requireSessionUser() {
 }
 
 export async function syncAuthenticatedUser(authenticatedUser?: User | null) {
-  const authUser = authenticatedUser || await requireSessionUser()
+  const authUser = authenticatedUser || (await requireSessionUser())
 
   if (!authUser?.email) {
     return null

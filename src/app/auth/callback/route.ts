@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/signin', request.url))
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   
   const {data:{session},error} =  await supabase.auth.exchangeCodeForSession(code)
