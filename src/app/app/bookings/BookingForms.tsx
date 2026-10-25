@@ -143,6 +143,13 @@ export function BookingForms({
       <summary>Edit booking</summary>
 
       <form
+        key = {JSON.stringify([
+          booking.id, 
+          booking.clientName, 
+          booking.roomId, 
+          new Date(booking.startAt).toISOString(),
+          new Date(booking.endAt).toDateString(),
+          timezone])}
         action={updateFormAction}
         className="stack"
         style={{ marginTop: 12 }}
